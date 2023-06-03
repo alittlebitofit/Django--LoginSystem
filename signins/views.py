@@ -10,16 +10,16 @@ def index(request):
 	return render(request, "signins/register.html")
 
 
-def register(request, username, password):
+def register(request):
 	uname = request.POST['username']
 	pword = request.POST['password']
 
 	try:
 		user = User.objects.create_user(uname, password=pword)
 
-	except (e):
+	except:
 
-		print(e)
+		print("===================================== heyo ========================")
 
 		return HttpResponse("BOO FOR FAILURE")
 

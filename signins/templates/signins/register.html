@@ -10,7 +10,7 @@
 
     <body>
 
-        <form action="{% urls 'signins:register' %}" method="post">
+        <form action="{% url 'signins:register' %}" method="post">
             {% csrf_token %}
 
             <h1>Sign up!</h1>

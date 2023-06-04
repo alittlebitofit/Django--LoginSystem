@@ -13,6 +13,10 @@
         <form action="{% url 'signins:register' %}" method="post">
             {% csrf_token %}
 
+			{% if error_message %}
+				</p><strong>{{ error_message }}</strong></p>
+			{% endif %}
+
             <h1>Sign up!</h1>
 			<label for="uname">Username: </label>
 			<input type="text" name="username" id="uname" required>

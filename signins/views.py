@@ -12,23 +12,23 @@ def index(request):
 	return render(request, "signins/register.html")
 
 
+
+
+
+
+
+
 def register(request):
 
-	uname = request.POST.get('username')
-	pword = request.POST.get('password')
+	uname = request.POST['username']
+	pword = request.POST['password']
 
 	try:
 		user = User.objects.create_user(uname, password=pword)
 
 	except:
 
-		print("=============================================failed?")
-
-		#return HttpResponse("BOO FOR FAILURE")
-
-		#return render(request, "BOO FOR FAILURE")
-
-        # Redisplay the question voting form.
+        # Redisplay the registration because registration failed.
 		return render(
 			request,
 			"signins/register.html",
@@ -42,15 +42,25 @@ def register(request):
 		# Always return an HttpResponseRedirect after successfully dealing
 		# with POST data. This prevents data from being posted twice if
 		# user hits the back button.
-		#return render(request, "CONGRATS FOR SIGNUP SUCCESS!")
-		print("register================================ Login success or failure ====================")
 		return HttpResponseRedirect("/signins/login/")
 
 
+
+
+
+
+
 def login(request):
-	print("login================================ Login success or failure ====================")
-	#return HttpResponse("LOGIN PAGE")
 	return render(request, "signins/login.html")
+
+
+def attemptSignIn(request):
+
+	print("==============attemptSignIn==========")
+
+	return HttpResponse("success or failure?")
+
+
 
 
 def success(request):

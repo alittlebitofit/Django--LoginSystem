@@ -49,7 +49,8 @@ def register(request):
 
 def login(request):
 	print("login================================ Login success or failure ====================")
-	return HttpResponse("LOGIN PAGE")
+	#return HttpResponse("LOGIN PAGE")
+	return render(request, "signins/login.html")
 
 
 def success(request):

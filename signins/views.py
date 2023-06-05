@@ -12,12 +12,6 @@ def index(request):
 	return render(request, "signins/register.html")
 
 
-
-
-
-
-
-
 def register(request):
 
 	uname = request.POST['username']
@@ -43,12 +37,6 @@ def register(request):
 		# with POST data. This prevents data from being posted twice if
 		# user hits the back button.
 		return HttpResponseRedirect("/signins/login/")
-
-
-
-
-
-
 
 def login(request):
 	return render(request, "signins/login.html")

@@ -3,9 +3,11 @@ from django.urls import reverse
 
 from django.contrib.auth.models import User
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from django.http import HttpResponse
+
+from django.contrib.auth import authenticate, login
 
 
 def index(request):
@@ -36,17 +38,29 @@ def register(request):
 		# Always return an HttpResponseRedirect after successfully dealing
 		# with POST data. This prevents data from being posted twice if
 		# user hits the back button.
-		return HttpResponseRedirect("/signins/login/")
+		#return HttpResponseRedirect("/signins/login/")
+		return render(request, "signins/login.html")
+		return redirect("/signins/login/")
 
 def login(request):
-	return render(request, "signins/login.html")
+	#return render(request, "signins/login.html")
 
 
-def attemptSignIn(request):
+#def attemptSignIn(request):
 
 	print("==============attemptSignIn==========")
 
-	return HttpResponse("success or failure?")
+	uname = request.POST["username"]
+	pword = request.POST["password"]
+
+	user = authenticate(request, username=uname, password=pword)
+
+	if user is not None:
+		print("Authenticated user")
+	else:
+		print("Non-authenticated user")
+
+	return HttpResponse("<h1 style='font-size:60px'>success or failure?</h1>")
 
 
 

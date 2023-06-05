@@ -39,11 +39,15 @@ def register(request):
 		# with POST data. This prevents data from being posted twice if
 		# user hits the back button.
 		#return HttpResponseRedirect("/signins/login/")
-		return render(request, "signins/login.html")
+		#return render(request, "signins/login.html")
 		return redirect("/signins/login/")
 
 def login(request):
 	#return render(request, "signins/login.html")
+
+	if request.method == "GET":
+		return render(request, "signins/login.html")
+
 
 
 #def attemptSignIn(request):

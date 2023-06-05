@@ -40,9 +40,9 @@ def register(request):
 		# user hits the back button.
 		#return HttpResponseRedirect("/signins/login/")
 		#return render(request, "signins/login.html")
-		return redirect("/signins/login/")
+		return redirect("/signins/signin/")
 
-def login(request):
+def signin(request):
 	#return render(request, "signins/login.html")
 
 	if request.method == "GET":
@@ -61,8 +61,11 @@ def login(request):
 
 	if user is not None:
 		print("Authenticated user")
+		login(request, user)
+		return redirect("/signins/success")
 	else:
 		print("Non-authenticated user")
+		return redirect("/signins/failed")
 
 	return HttpResponse("<h1 style='font-size:60px'>success or failure?</h1>")
 
@@ -70,7 +73,7 @@ def login(request):
 
 
 def success(request):
-	return render(request, "CONGRATS FOR SIGNING UP SUCCESSFULLY!")
+	return HttpResponse("<h1 style='font-size:60px'>CONGRATS FOR SIGNING UP SUCCESSFULLY!</h1>")
 
 def failed(request):
-	return redirect("To signup page again, but with an error message, and don't for resubmission on back button, that's achieved by redirection")
+	return HttpResponse("<h1 style='font-size:60px'>To signup page again, but with an error message, and don't for resubmission on back button, that's achieved by redirection</h1>")

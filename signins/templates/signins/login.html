@@ -9,7 +9,7 @@
 
     <body>
 
-        <form action="{% url 'signins:login' %}" method="post">
+        <form action="{% url 'signins:signin' %}" method="post">
             {% csrf_token %}
 
             {% if error_message %}

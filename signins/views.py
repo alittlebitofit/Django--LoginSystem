@@ -78,21 +78,44 @@ def signin(request):
 
 
 
-@login_required
 def success(request):
 	"""
-		Displays a success page on GET request with a LogOut button for now.
-		On POST request however, it simply logs the user out.
+		Displays a success page with a Delete Account
+		and LogOut button, only to the logged in user.
+		Otherwise, it redirects to signin page.
 	"""
 
-	if request.method == "GET":
+	if request.user.is_authenticated:
 		return render(request, "signins/success.html")
-
-	logout(request)
-
-	return HttpResponseRedirect("/signins/signin")
+	else:
+		return redirect("/signins/signin")
 
 
+def deleteOrLogout(request):
+	"""
+		Checks whether the user is logged in first.
+		Then proceeds to either delete the account or logout depending upon
+			what the user wants.
+		Finally, redirects to Signin page.
+	"""
 
+	if request.user.is_authenticated:
+		if "deleteAccount" in request.POST:
+			request.user.delete()
+			return redirect("/signins/register")
+		elif "logoutUser" in request.POST:
+			logout(request)
+			return redirect("/signins/signin")
+		else:
+			# Do this to redirect to the logged in page.
+			# This can happen if the user tries to manually access this view/url.
+			return redirect("/signins/success")
+	else:
+		# If the user is not authentic, then redirect to signin page.
+		return redirect("/signins/signin")
+
+
+
+# Unused view: failed lol
 def failed(request):
 	return HttpResponse("<h1 style='font-size:60px'>To signup page again, but with an error message, and don't for resubmission on back button, that's achieved by redirection</h1>")

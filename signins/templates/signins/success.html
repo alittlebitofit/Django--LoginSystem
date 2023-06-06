@@ -9,14 +9,15 @@
 
     <body>
 
-        <form action="{% url 'signins:success' %}" method="post">
+        <form action="{% url 'signins:deleteOrLogout' %}" method="post">
             {% csrf_token %}
 
             {% if error_message %}
                 </p><strong>{{ error_message }}</strong></p>
             {% endif %}
 
-            <input type="submit" value="Logout">
+            <input type="submit" name="deleteAccount" value="Delete">
+            <input type="submit" name="logoutUser" value="Logout">
 
         </form>
 

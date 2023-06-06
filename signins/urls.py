@@ -10,5 +10,6 @@ urlpatterns = [
 	path("register/", views.register, name="register"),
 	path("signin/", views.signin, name="signin"),
 	path("success/", views.success, name="success"),
+	path("deleteOrLogout/", views.deleteOrLogout, name="deleteOrLogout"),
 	path("failed/", views.failed, name="failed"),
 ]

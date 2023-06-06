@@ -11,10 +11,12 @@ from django.contrib.auth import authenticate, login, logout
 
 
 def index(request):
-	return render(request, "signins/register.html")
-
+	return redirect("/signins/register")
 
 def register(request):
+
+	if request.method == "GET":
+		return render(request, "signins/register.html")
 
 	uname = request.POST['username']
 	pword = request.POST['password']
@@ -46,7 +48,7 @@ def signin(request):
 	#return render(request, "signins/login.html")
 
 	if request.method == "GET":
-		return render(request, "signins/login.html")
+		return render(request, "signins/signin.html")
 
 
 

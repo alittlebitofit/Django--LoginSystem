@@ -11,7 +11,13 @@ from django.contrib.auth.decorators import login_required
 
 
 def index(request):
-	"""Simply redirects to registration page"""
+	"""
+		Redirects to logged in page if the user is logged in.
+		Otherwise, takes you to registration page
+	"""
+	if request.user.is_authenticated:
+		return redirect("/signins/success")
+
 	return redirect("/signins/register")
 
 
@@ -80,42 +86,67 @@ def signin(request):
 
 def success(request):
 	"""
-		Displays a success page with a Delete Account
-		and LogOut button, only to the logged in user.
+		Displays a success page with a Change Password, Delete Account
+		and Logout button, only to the logged in user.
 		Otherwise, it redirects to signin page.
-	"""
 
-	if request.user.is_authenticated:
-		return render(request, "signins/success.html")
-	else:
-		return redirect("/signins/signin")
-
-
-def deleteOrLogout(request):
-	"""
 		Checks whether the user is logged in first.
-		Then proceeds to either delete the account or logout depending upon
-			what the user wants.
+		Then proceeds to either change the password, delete the account
+			or logout depending upon what the user wants.
 		Finally, redirects to Signin page.
 	"""
 
-	if request.user.is_authenticated:
-		if "deleteAccount" in request.POST:
-			request.user.delete()
-			return redirect("/signins/register")
-		elif "logoutUser" in request.POST:
-			logout(request)
-			return redirect("/signins/signin")
-		else:
-			# Do this to redirect to the logged in page.
-			# This can happen if the user tries to manually access this view/url.
-			return redirect("/signins/success")
-	else:
-		# If the user is not authentic, then redirect to signin page.
+	# If the user is not authentic, then redirect to signin page.
+	if not request.user.is_authenticated:
+		return redirect("/signins/signin")
+
+	# GET request always renders a page, a success page in this case.
+	if request.method == "GET":
+		return render(request, "signins/success.html")
+
+
+	# POST request handling
+	if "changePassword" in request.POST:
+		return redirect("/signins/changePassword")
+
+	elif "deleteAccount" in request.POST:
+		request.user.delete()
+		return redirect("/signins/register")
+
+	elif "logoutUser" in request.POST:
+		logout(request)
 		return redirect("/signins/signin")
 
 
+# Changes Password.
+def changePassword(request):
 
-# Unused view: failed lol
-def failed(request):
-	return HttpResponse("<h1 style='font-size:60px'>To signup page again, but with an error message, and don't for resubmission on back button, that's achieved by redirection</h1>")
+	# If the user is not authentic, then redirect to signin page.
+	if not request.user.is_authenticated:
+		return redirect("/signins/signin")
+
+	# A GET request, so render an appropriate page.
+	if request.method == "GET":
+		return render(request, "signins/changePassword.html")
+
+	# POST request handling
+	if "cancel" in request.POST:
+		return redirect("/signins/success")
+
+	elif "change" in request.POST:
+		# If password is empty, display error.
+		if request.POST["new_password"] == "":
+			return render(
+				request,
+				"signins/changePassword.html",
+				{
+					"empty_password": "Password cannot be empty.",
+				},
+			)
+
+		# Else change the password and manually save it in db.
+		else:
+			request.user.set_password(request.POST["new_password"])
+			request.user.save()
+			logout(request)
+			return redirect("/signins/signin")

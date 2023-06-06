@@ -9,7 +9,6 @@ urlpatterns = [
     path("", views.index, name="index"),
 	path("register/", views.register, name="register"),
 	path("signin/", views.signin, name="signin"),
-	#path("attemptSignIn/", views.attemptSignIn, name="attemptSignIn"),
 	path("success/", views.success, name="success"),
 	path("failed/", views.failed, name="failed"),
 ]

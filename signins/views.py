@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 
 from django.http import HttpResponse
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 
 def index(request):
@@ -65,15 +65,28 @@ def signin(request):
 		return redirect("/signins/success")
 	else:
 		print("Non-authenticated user")
-		return redirect("/signins/failed")
-
-	return HttpResponse("<h1 style='font-size:60px'>success or failure?</h1>")
+		return render(
+			request,
+			"signins/login.html",
+			{
+				"error_message": "Login failed. Try again.",
+			},
+		)
 
 
 
 
 def success(request):
-	return HttpResponse("<h1 style='font-size:60px'>CONGRATS FOR SIGNING UP SUCCESSFULLY!</h1>")
+
+	if request.method == "GET":
+		return render(request, "signins/success.html")
+
+	logout(request)
+	print("==========Logged out=========")
+
+	return HttpResponseRedirect("/signins/signin")
+
+
 
 def failed(request):
 	return HttpResponse("<h1 style='font-size:60px'>To signup page again, but with an error message, and don't for resubmission on back button, that's achieved by redirection</h1>")

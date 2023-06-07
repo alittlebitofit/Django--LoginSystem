@@ -26,7 +26,13 @@ def index(request):
 def register(request):
 	"""Displays signup form as well as handles the registration mechanism"""
 	if request.method == "GET":
-		return render(request, "signins/reg.html")
+		return render(
+			request,
+			"signins/reg.html",
+			{
+				"registration_tab": True,
+			},
+		)
 
 	#uname = request.POST['username']
 	#pword = request.POST['password']
@@ -46,7 +52,7 @@ def register(request):
 			first_name = fname,
 			last_name = lname,
 			username = uname,
-			email = 'email',
+			email = email,
 			password = pword,
 		)
 
@@ -60,6 +66,7 @@ def register(request):
 			"signins/reg.html",
 			{
 				"error_message": "Registration failed. Try again.",
+				"registration_tab": True,
 			},
 		)
 

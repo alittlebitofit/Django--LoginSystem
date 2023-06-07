@@ -26,27 +26,46 @@ def index(request):
 def register(request):
 	"""Displays signup form as well as handles the registration mechanism"""
 	if request.method == "GET":
-		return render(request, "signins/register.html")
+		return render(request, "signins/reg.html")
 
-	uname = request.POST['username']
-	pword = request.POST['password']
+	#uname = request.POST['username']
+	#pword = request.POST['password']
+
+	fname = request.POST['first_name_register']
+	lname = request.POST['last_name_register']
+	uname = request.POST['username_register']
+	email = request.POST['email_register']
+	pword = request.POST['password_register']
+	pword_repeat = request.POST['repeat_password_register']
+
+	tnc_checkbox_register = request.POST['tnc_checkbox_register']
 
 	try:
 		# Try creating a new user
-		user = User.objects.create_user(uname, password=pword)
+		user = User.objects.create_user(
+			first_name = fname,
+			last_name = lname,
+			username = uname,
+			email = 'email',
+			password = pword,
+		)
 
 	except:
+
+		print("========== failed registration :( ==========")
 
         # Redisplay the registration because registration failed.
 		return render(
 			request,
-			"signins/register.html",
+			"signins/reg.html",
 			{
 				"error_message": "Registration failed. Try again.",
 			},
 		)
 
 	else:
+
+		print("========== successful registration :D ==========")
 
 		# Successfully created a new user and it was automatically saved in the db.
 
@@ -62,11 +81,13 @@ def signin(request):
 	print("==========am i being called?==========")
 
 	if request.method == "GET":
-		return render(request, "signins/signin.html")
+		return render(request, "signins/reg.html")
 
 
-	uname = request.POST["username"]
-	pword = request.POST["password"]
+	uname = request.POST["username_login"]
+	pword = request.POST["password_login"]
+
+	remember_me_checkbox_login = request.POST['remember_me_checkbox_login']
 
 	user = authenticate(request, username=uname, password=pword)
 
@@ -79,7 +100,7 @@ def signin(request):
 		# Authentication failed. Redisplay the login form.
 		return render(
 			request,
-			"signins/signin.html",
+			"signins/reg.html",
 			{
 				"error_message": "Login failed. Try again.",
 			},

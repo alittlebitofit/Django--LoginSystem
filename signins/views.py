@@ -18,7 +18,8 @@ def index(request):
 	if request.user.is_authenticated:
 		return redirect("/signins/success")
 
-	return redirect("/signins/register")
+	#return redirect("/signins/register")
+	return render(request, "signins/reg.html")
 
 
 
@@ -57,6 +58,8 @@ def register(request):
 
 def signin(request):
 	"""Displays signin form as well as handles the signin mechanism"""
+
+	print("==========am i being called?==========")
 
 	if request.method == "GET":
 		return render(request, "signins/signin.html")

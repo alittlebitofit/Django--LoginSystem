@@ -19,7 +19,7 @@ def index(request):
 		return redirect("/signins/success")
 
 	#return redirect("/signins/register")
-	return render(request, "signins/reg.html")
+	return render(request, "signins/sign.html")
 
 
 
@@ -28,7 +28,7 @@ def register(request):
 	if request.method == "GET":
 		return render(
 			request,
-			"signins/reg.html",
+			"signins/sign.html",
 			{
 				"registration_tab": True,
 			},
@@ -63,7 +63,7 @@ def register(request):
         # Redisplay the registration because registration failed.
 		return render(
 			request,
-			"signins/reg.html",
+			"signins/sign.html",
 			{
 				"error_message": "Registration failed. Try again.",
 				"registration_tab": True,
@@ -88,7 +88,7 @@ def signin(request):
 	print("==========am i being called?==========")
 
 	if request.method == "GET":
-		return render(request, "signins/reg.html")
+		return render(request, "signins/sign.html")
 
 
 	uname = request.POST["username_login"]
@@ -107,7 +107,7 @@ def signin(request):
 		# Authentication failed. Redisplay the login form.
 		return render(
 			request,
-			"signins/reg.html",
+			"signins/sign.html",
 			{
 				"error_message": "Login failed. Try again.",
 			},

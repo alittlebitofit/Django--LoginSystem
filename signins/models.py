@@ -9,7 +9,6 @@ class TwoFA(models.Model):
 		User,
 		on_delete=models.CASCADE,
 		primary_key=True,
-#		default='',
 	)
 
 	token = models.CharField(max_length=32)

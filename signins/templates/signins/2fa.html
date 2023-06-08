@@ -12,15 +12,7 @@
         <form action="{% url 'signins:2fa' %}" method="post">
             {% csrf_token %}
 
-            {% if error_message %}
-                </p><strong>{{ error_message }}</strong></p>
-            {% endif %}
-
-            {% if is_change_password %}
-                <input type="password" name="new_password">
-                <input type="submit" name="cancel" value="Cancel">
-                <input type="submit" name="change" value="Change">
-            {% else %}
+            {% if gen %}}</p>
                 <input type="submit" name="changePassword" value="Change Password">
             {% endif %}
 

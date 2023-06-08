@@ -68,8 +68,6 @@ def register(request):
 
 	except:
 
-		print("========== failed registration :( ==========")
-
         # Redisplay the registration because registration failed.
 		return render(
 			request,
@@ -82,8 +80,6 @@ def register(request):
 
 	else:
 
-		print("========== successful registration :D ==========")
-
 		# Successfully created a new user and it was automatically saved in the db.
 
 		# Always return an HttpResponseRedirect after successfully dealing
@@ -94,8 +90,6 @@ def register(request):
 
 def signin(request):
 	"""Displays signin form as well as handles the signin mechanism"""
-
-	print("==========am i being called?==========")
 
 	if request.method == "GET":
 		return render(request, "signins/sign.html")
@@ -204,101 +198,93 @@ def twoFa(request):
 
 
 	if request.method == 'GET':
+		return render(
+			request,
+			"signins/2fa.html",
+			{
+				"gen": True,
+			},
+		)
 
-		""" Step 1: Generating a base32-encoded token """
-		# length of OTP in digits
-		length = 6
-
-		# timestamp or time-window for which the token is valid
-		step_in_seconds = 30
-
-		#import base64
-
-		# random key
-		#import random
-		random_number = random.randint(1000000000, 9999999999)
-		user_username = request.user.username
-		current_time = int(time.time())
-
-		string = user_username + str(random_number) + str(current_time)
-		print("string:",string)
-
-		l = list(string)
-		print("list:", l)
-		print("list len:",len(l))
-
-		k = ''
-
-		for i in range(20):
-			k += str(l.pop(random.randrange(len(l))))
-
-		print("k:", k)
-		print("k length:", len(k))
-
-		key = bytes(k, 'utf-8')
-		#key = bytes(user_username + str(random_number) + str(current_time), 'ascii')
-		#key = b'123123123djwkdhawjdk'
-
-
-
-		token = base64.b32encode(key)
-
-		sec = token.decode('utf-8')
-		print("secret:", sec)
-		print("length:", len(sec))
-		print("key:", key)
-
-
-
-
-		""" Step 2: Generating hmac hexdigest """
-
-		#import hashlib
-		#import hmac
-		#import math
-		#import time
-
-		t = math.floor(time.time() // step_in_seconds)
-
-		hmac_object = hmac.new(key, t.to_bytes(length=8, byteorder='big'), hashlib.sha1)
-		hmac_sha1 = hmac_object.hexdigest()
-
-		# truncate to 6 digits
-		offset = int(hmac_sha1[-1], 16)
-		binary = int(hmac_sha1[(offset * 2):((offset * 2) + 8)], 16) & 0x7fffffff
-		totp = str(binary)[-length:]
-		print(totp)
-
-
-
-
-		""" Step 3: Generating QR Code """
-
-		# Create a temporary directory to store qrcode.
-		#import os
-		os.makedirs('signins/tmp/'+user_username)
-
-		# Generating QR Code
-		image_path = 'signins/tmp/'+user_username+'/token_qr.png'
-
-		#import qrcode
-
-		user_email = request.user.email
-		qr_string = 'otpauth://totp/Login-System:' + user_email + '?secret=' + token.decode('utf-8') + '&issuer=Login-System&algorithm=SHA1&digits=6&period=30'
-
-		print(qr_string)
-		img = qrcode.make(qr_string)
-		img.save(image_path)
-		print("========== image saved successfully ==========")
-
-		#DELETE TMP FOLDER AFTER 2FA IS ENABLED OR EVEN IF 2FA IS CANCELLED
-		#os.rmdir('signins/tmp/'+user_username)
-		shutil.rmtree('signins/tmp/'+user_username)
 
 
 	if request.method == 'POST':
+		user_username = request.user.username
+		shutil.rmtree('signins/tmp/'+user_username)
 		pass
 
 
 
 	return HttpResponse("hmm")
+
+
+
+
+
+def gen_token(user_username):
+
+	""" Step 1: Generating a base32-encoded token """
+
+	random_number = random.randint(1000000000, 9999999999)
+	current_time = int(time.time())
+
+	string = user_username + str(random_number) + str(current_time)
+
+	l = list(string)
+
+	k = ''
+
+	for i in range(20):
+		k += str(l.pop(random.randrange(len(l))))
+
+	key = bytes(k, 'utf-8')
+
+	token = base64.b32encode(key)
+
+	return (key, token)
+
+
+def gen_qrcode(user_username, user_email, token):
+
+	""" Step 3: Generating QR Code """
+
+	# Create a temporary directory to store qrcode.
+	os.makedirs('signins/templates/signins/tmp/'+user_username)
+
+	# Generating QR Code
+	image_path = 'signins/tmp/'+user_username+'/token_qr.png'
+
+	qr_string = 'otpauth://totp/Login-System:' + user_email + '?secret=' + token.decode('utf-8') + '&issuer=Login-System&algorithm=SHA1&digits=6&period=30'
+
+	img = qrcode.make(qr_string)
+	img.save(image_path)
+
+	#DELETE TMP FOLDER AFTER 2FA IS ENABLED OR EVEN IF 2FA IS CANCELLED
+	#os.rmdir('signins/tmp/'+user_username)
+	#shutil.rmtree('signins/templates/signins/tmp/'+user_username)
+
+
+
+
+
+def gen_totp(key):
+
+	""" Step 2: Generating hmac hexdigest """
+
+	# length of OTP in digits
+	length = 6
+
+	# timestamp or time-window for which the token is valid
+	step_in_seconds = 30
+
+
+	t = math.floor(time.time() // step_in_seconds)
+
+	hmac_object = hmac.new(key, t.to_bytes(length=8, byteorder='big'), hashlib.sha1)
+	hmac_sha1 = hmac_object.hexdigest()
+
+	# truncate to 6 digits
+	offset = int(hmac_sha1[-1], 16)
+	binary = int(hmac_sha1[(offset * 2):((offset * 2) + 8)], 16) & 0x7fffffff
+	totp = str(binary)[-length:]
+	print(totp)

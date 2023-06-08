@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>2fa</title>
+    </head>
+
+    <body>
+
+        <form action="{% url 'signins:2fa' %}" method="post">
+            {% csrf_token %}
+
+            {% if error_message %}
+                </p><strong>{{ error_message }}</strong></p>
+            {% endif %}
+
+            {% if is_change_password %}
+                <input type="password" name="new_password">
+                <input type="submit" name="cancel" value="Cancel">
+                <input type="submit" name="change" value="Change">
+            {% else %}
+                <input type="submit" name="changePassword" value="Change Password">
+            {% endif %}
+
+            <input type="submit" name="deleteAccount" value="Delete">
+            <input type="submit" name="logoutUser" value="Logout">
+
+            <input type="submit" name="2fa" value="Enable 2FA?">
+
+        </form>
+
+    </body>
+
+</html>

@@ -11,4 +11,5 @@ urlpatterns = [
 	path("signin/", views.signin, name="signin"),
 	path("success/", views.success, name="success"),
 	path("changePassword/", views.changePassword, name="changePassword"),
+	path("2fa/", views.twoFa, name="2fa"),
 ]

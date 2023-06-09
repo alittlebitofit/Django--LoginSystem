@@ -141,23 +141,43 @@ def success(request):
 
 	# GET request always renders a page, a success page in this case.
 	if request.method == "GET":
+		if hasattr(request.user, 'twofa'):
+			return render(
+				request,
+				'signins/success.html',
+				{
+					'2fa_exists': True,
+				},
+			)
+
 		return render(request, "signins/success.html")
 
 
 	# POST request handling
-	if "changePassword" in request.POST:
-		return redirect("/signins/changePassword")
+	if request.method == 'POST':
 
-	elif "deleteAccount" in request.POST:
-		request.user.delete()
-		return redirect("/signins/register")
+		if "changePassword" in request.POST:
+			return redirect("/signins/changePassword")
 
-	elif "logoutUser" in request.POST:
-		logout(request)
-		return redirect("/signins")
+		elif "deleteAccount" in request.POST:
+			request.user.delete()
+			return redirect("/signins/register")
 
-	elif "2fa" in request.POST:
-		return redirect("/signins/2fa")
+		elif "logoutUser" in request.POST:
+			logout(request)
+			return redirect("/signins")
+
+		elif "2fa" in request.POST:
+			return redirect("/signins/2fa")
+
+		elif 'disable_2fa' in request.POST:
+			request.user.twofa.delete()
+			return redirect('/signins')
+
+		elif 'change_2fa' in request.POST:
+			return redirect('/signins/2fa')
+
+	return HttpResponse('<h1 style="font-size: 64px; padding: 16px;">It will be alright</h1>')
 
 
 # Changes Password.

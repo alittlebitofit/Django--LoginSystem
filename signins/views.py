@@ -198,11 +198,22 @@ def twoFa(request):
 
 
 	if request.method == 'GET':
+
+		user_username = request.user.username
+		user_email = request.user.email
+
+		key = gen_token(user_username)
+		request.session['2fa_key'] = key.decode('utf-8')
+
+		gen_qrcode(user_username, user_email, key)
+
 		return render(
 			request,
 			"signins/2fa.html",
 			{
 				"gen": True,
+				'username': user_username,
+				'token': base64.b32encode(key).decode('utf-8'),
 			},
 		)
 
@@ -239,20 +250,23 @@ def gen_token(user_username):
 
 	key = bytes(k, 'utf-8')
 
-	token = base64.b32encode(key)
-
-	return (key, token)
+	return key
 
 
-def gen_qrcode(user_username, user_email, token):
+def gen_qrcode(user_username, user_email, key):
 
 	""" Step 3: Generating QR Code """
 
 	# Create a temporary directory to store qrcode.
-	os.makedirs('signins/templates/signins/tmp/'+user_username)
+	path_to_img = 'signins/static/signins/tmp/'+user_username
+
+	if not os.path.exists(path_to_img):
+		os.makedirs(path_to_img)
 
 	# Generating QR Code
-	image_path = 'signins/tmp/'+user_username+'/token_qr.png'
+	image_path = path_to_img+'/token_qr.png'
+
+	token = base64.b32encode(key)
 
 	qr_string = 'otpauth://totp/Login-System:' + user_email + '?secret=' + token.decode('utf-8') + '&issuer=Login-System&algorithm=SHA1&digits=6&period=30'
 
@@ -260,7 +274,7 @@ def gen_qrcode(user_username, user_email, token):
 	img.save(image_path)
 
 	#DELETE TMP FOLDER AFTER 2FA IS ENABLED OR EVEN IF 2FA IS CANCELLED
-	#os.rmdir('signins/tmp/'+user_username)
+	#os.rmdir('signins/tmp/q¹'+user_username)
 	#shutil.rmtree('signins/templates/signins/tmp/'+user_username)
 
 

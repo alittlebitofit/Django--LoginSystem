@@ -12,14 +12,18 @@
         <form action="{% url 'signins:2fa' %}" method="post">
             {% csrf_token %}
 
-            {% if gen %}}</p>
-                <input type="submit" name="changePassword" value="Change Password">
+            {% if gen %}
+				{% load static  %}
+				<img src="{% static 'signins/tmp'  %}/{{ username }}/token_qr.png" height=200 width=200>
             {% endif %}
 
-            <input type="submit" name="deleteAccount" value="Delete">
-            <input type="submit" name="logoutUser" value="Logout">
+			<p>{{token}}</p>
 
-            <input type="submit" name="2fa" value="Enable 2FA?">
+			<input type="number" maxlength=6>
+			<br><br>
+            <input type="submit" name="cancal_2fa" value="Cancel">
+
+            <input type="submit" name="verify_2fa" value="Verify">
 
         </form>
 

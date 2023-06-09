@@ -290,6 +290,9 @@ def twoFa(request):
 					if int(totp) == user_totp:
 						print("========== totp matched ==========")
 
+						if hasattr(request.user, 'twofa'):
+							request.user.twofa.delete()
+
 						token_to_save = TwoFA(user=request.user, token=generated_token)
 						token_to_save.save()
 

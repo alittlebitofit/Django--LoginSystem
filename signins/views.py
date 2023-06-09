@@ -92,12 +92,22 @@ def register(request):
 		return redirect("/signins/signin/")
 
 
+def page_two(request):
+    sess_var = request.session.get('sessvar', None)
+    return HttpResponse(f'hi too: {sess_var}')
+
+def page_three(request):
+    request.session['sessvar'] = "FUCK"
+    return HttpResponse(f'I just set a session var...')
+
+
 def signin(request):
 	"""Displays signin form as well as handles the signin mechanism"""
 
 	if request.method == "GET":
 		return render(request, "signins/sign.html")
 
+	return redirect('/signins/page_two')
 
 	uname = request.POST["username_login"]
 	pword = request.POST["password_login"]
@@ -105,11 +115,35 @@ def signin(request):
 	remember_me_checkbox_login = request.POST['remember_me_checkbox_login']
 
 	user = authenticate(request, username=uname, password=pword)
+	print('==========user=========',user, type(user))
+
+	request.session['authenticate_uname'] = 291
+
+	if uname in request.session:
+		print("12345")
+	else:
+		print(54321)
+
+	#print(request.session['authenticate_user'])
+
+	if not request.session.exists('authenticate_uname'):
+		print('========== why no exist? =========2')
+		print('user idddddd', user.id)
+
+	else:
+		print('========== yayyy exists ==========2')
+
+
+	#request.session['authenticated_user'] = user
 
 	if user is not None:
 		# Since the user is authenticated, login and then redirect to success page.
-		login(request, user)
-		return redirect("/signins/success")
+		#login(request, user)
+		request.session['authenticate_uname'] = uname
+		request.session['authenticate_pword'] = pword
+		#return redirect("/signins/verify", permanent=True)
+		#return redirect(reverse('signins:verify2fa', args=(user,)))
+		return redirect('/signins/verify', us=user)
 	else:
 
 		# Authentication failed. Redisplay the login form.
@@ -120,6 +154,87 @@ def signin(request):
 				"error_message": "Login failed. Try again.",
 			},
 		)
+
+def verify_2fa(request, **kwargs):
+	'''
+	if not request.user.is_authenticated:
+		print('========== authenticated or not? ==========')
+		print('==========request.user==========', request.user)
+		d = request.session.exists('hkhi')
+		return redirect('/signins')
+	'''
+
+	if request.method == 'GET':
+		if not request.session.exists('authenticate_uname'):
+			print('========== why no exist? =========')
+			return redirect('/signins')
+
+		print('========== yayyy exists ==========')
+
+		return render(request, 'signins/verify_2fa.html')
+
+	if request.method == 'POST':
+
+		if 'cancel_verifying_2fa' in request.POST:
+			logout(request)
+			return redirect('/signins')
+
+		elif 'verify_2fa' in request.POST:
+
+			if 'totp' in request.POST:
+				totp_user = request.POST['totp']
+
+				key = bytes(request.user.twofa.token, 'utf-8')
+				totp = gen_totp(key)
+
+				if totp_user == totp:
+					print('========== successfully verified via totp ==========')
+
+					uname = request.session['authenticate_uname']
+					pword = request.session['authenticate_pword']
+
+					user = authenticate(request, username=uname, password=pword)
+					login(request, user)
+					del request.session['authenticate_uname']
+					del request.session['authenticate_pword']
+
+					return redirect('/signins/success')
+
+				else:
+					return render(
+						request,
+						'signins/verify_2fa.html',
+						{
+							'incorrect_totp': 'Invalid TOTP. Please try again.',
+						},
+					)
+
+			elif 'backupCode' in request.POST:
+				if request.user.twofa.verify_using_backup_code(request.POST['backupCode']):
+
+
+					uname = request.session['authenticate_uname']
+					pword = request.session['authenticate_pword']
+
+					user = authenticate(request, username=uname, password=pword)
+					login(request, user)
+					del request.session['authenticate_uname']
+					del request.session['authenticate_pword']
+
+					return redirect('/signins/success')
+
+
+				else:
+					logout(request)
+					return render(
+						request,
+						'signins/verify_2fa.html',
+						{
+							'incorrect_backupcode': 'Invalid Backup Code. Please try again.',
+						},
+					)
+
+	return redirect('/signins')
 
 
 
@@ -167,15 +282,17 @@ def success(request):
 			logout(request)
 			return redirect("/signins")
 
-		elif "2fa" in request.POST:
-			return redirect("/signins/2fa")
+		elif "enable_2fa" in request.POST:
+			return redirect("/signins/set-2fa")
 
 		elif 'disable_2fa' in request.POST:
 			request.user.twofa.delete()
 			return redirect('/signins')
 
 		elif 'change_2fa' in request.POST:
-			return redirect('/signins/2fa')
+			return redirect('/signins/set-2fa')
+
+
 
 	return HttpResponse('<h1 style="font-size: 64px; padding: 16px;">It will be alright</h1>')
 
@@ -214,7 +331,7 @@ def changePassword(request):
 			return redirect("/signins")
 
 
-def twoFa(request):
+def set2fa(request):
 
 	if not request.user.is_authenticated:
 		return redirect("/signins")
@@ -246,7 +363,7 @@ def twoFa(request):
 
 		return render(
 			request,
-			"signins/2fa.html",
+			"signins/set_2fa.html",
 			{
 				'username': user_username,
 				'token': generated_saved_token,
@@ -292,7 +409,7 @@ def twoFa(request):
 					print("========== exception ocurred ==========")
 					return render(
 						request,
-						'signins/2fa.html',
+						'signins/set_2fa.html',
 						{
 							'error_message': 'Invalid TOTP',
 							'username': user_username,
@@ -350,7 +467,7 @@ def twoFa(request):
 				print("========== totp length should be 6 ==========")
 				return render(
 					request,
-					'signins/2fa.html',
+					'signins/set_2fa.html',
 					{
 						'error_message': 'Invalid TOTP',
 						'username': user_username,

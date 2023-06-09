@@ -4,13 +4,12 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>2fa</title>
+        <title>Set 2fa</title>
     </head>
 
     <body>
-		<h1>Hmmmmmmmmmmm</h1>
 
-        <form action="{% url 'signins:2fa' %}" method="post">
+        <form action="{% url 'signins:set2fa' %}" method="post">
             {% csrf_token %}
 
 			{% load static  %}

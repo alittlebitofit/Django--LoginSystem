@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verify 2fa</title>
+    </head>
+
+    <body>
+
+        <form action="{% url 'signins:verify2fa' %}" method="post">
+            {% csrf_token %}
+
+			{% if incorrect_totp %}
+				<p>{{ incorrect_totp }}</p>
+			{% elif incorrect_backupcode %}
+				<p>{{ incorrect_backupcode }}</p>
+			{% endif %}
+
+			<input type="number" id="totpOrbackupcode" name="totp">
+			<br><br>
+
+			<input type="button" onclick="toggle()" value="Enter Backup Code instead" id="toggle">
+			<br><br>
+
+			<input type="submit" name="cancel_verifying_2fa" value="Cancel">
+			<br><br>
+
+			<input type="submit" name="verify_2fa" value="Verify">
+			<br><br>
+
+        </form>
+
+		<script>
+			function toggle() {
+
+				let input_element = document.querySelector("#totpOrbackupcode");
+				let toggle_element = document.querySelector("#toggle");
+
+				
+
+				if (input_element.type == "number") {
+					input_element.type = "text";
+					input_element.name = "backupCode";
+
+					toggle_element.value = "Enter TOTP instead";
+				} else {
+					input_element.type = "number";
+					input_element.name = "totp";
+
+					toggle_element.value = "Enter Backup Code instead";
+				}
+
+			}
+		<script>
+
+    </body>
+
+</html>

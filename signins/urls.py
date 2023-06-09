@@ -11,5 +11,8 @@ urlpatterns = [
 	path("signin/", views.signin, name="signin"),
 	path("success/", views.success, name="success"),
 	path("changePassword/", views.changePassword, name="changePassword"),
-	path("2fa/", views.twoFa, name="2fa"),
+	path("set2fa/", views.set2fa, name="set2fa"),
+	path('verify/', views.verify_2fa, name='verify2fa'),
+	path('page_two/', views.page_two),
+	path('page_three/', views.page_three),
 ]

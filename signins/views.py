@@ -22,6 +22,8 @@ import shutil
 
 import uuid
 
+from .models import TwoFA, BackupCode
+
 def index(request):
 	"""
 		Redirects to logged in page if the user is logged in.
@@ -233,9 +235,10 @@ def twoFa(request):
 		)
 
 
-
 	if request.method == 'POST':
 
+
+		# if the 2fa process is cancelled
 		if 'cancel_2fa' in request.POST:
 			user_username = request.user.username
 			path_to_img = 'signins/static/signins/tmp/'+user_username
@@ -248,10 +251,17 @@ def twoFa(request):
 
 			return redirect('/signins/success')
 
+
+
+
+
+		# if the user proceeds to verify with totp
 		if 'verify_2fa' in request.POST:
-			user_totp = request.POST['totp']
+
 			user_username = request.user.username
 
+			user_totp = request.POST['totp']
+			generated_token = request.session['generated_saved_token']
 			backup_codes_list = request.session['backup_codes_list']
 
 			if len(user_totp) == 6:
@@ -266,7 +276,7 @@ def twoFa(request):
 						{
 							'error_message': 'Invalid TOTP',
 							'username': user_username,
-							'token': request.session['generated_saved_token'],
+							'token': generated_token,
 							'backup_codes': backup_codes_list,
 						},
     	            )
@@ -280,11 +290,24 @@ def twoFa(request):
 					if int(totp) == user_totp:
 						print("========== totp matched ==========")
 
+						token_to_save = TwoFA(user=request.user, token=generated_token)
+						token_to_save.save()
+
+						for code in backup_codes_list:
+							backup_code = BackupCode(twofa=token_to_save, code=code)
+							backup_code.save()
+
+						path_to_img = 'signins/static/signins/tmp/'+user_username
+						if os.path.exists(path_to_img):
+							shutil.rmtree(path_to_img)
+
 						del request.session['2fa_key']
 						del request.session['generated_saved_token']
 						del request.session['backup_codes_list']
 
-						return HttpResponse('<h1>TOTP MATCHED SUCCESS!</h1>')
+						logout(request)
+
+						return redirect('/signins')
 
 					else:
 						print("========== totp doesnt match ==========")
@@ -294,7 +317,7 @@ def twoFa(request):
 	                    	{
 		                        'error_message': 'Invalid TOTP',
 								'username': user_username,
-								'token': request.session['generated_saved_token'],
+								'token': generated_token,
 								'backup_codes': backup_codes_list,
 							},
 	    	            )
@@ -308,7 +331,7 @@ def twoFa(request):
 					{
 						'error_message': 'Invalid TOTP',
 						'username': user_username,
-						'token': request.session['generated_saved_token'],
+						'token': generated_token,
 						'backup_codes': backup_codes_list,
 					},
 				)

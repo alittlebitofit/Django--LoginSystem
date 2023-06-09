@@ -23,6 +23,14 @@
 			{% endif  %}
 			<input type="number" maxlength=6 name="totp">
 			<br><br>
+
+			<p>Backup codes</p>
+			<ul>
+				{% for code in backup_codes %}
+					<li>{{ code }}</li>
+				{% endfor %}
+			</ul>
+
 			<input type="submit" name="cancel_2fa" value="Cancel">
 
 			<input type="submit" name="verify_2fa" value="Verify">

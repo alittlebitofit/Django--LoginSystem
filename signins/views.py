@@ -202,31 +202,99 @@ def twoFa(request):
 		user_username = request.user.username
 		user_email = request.user.email
 
-		key = gen_token(user_username)
-		request.session['2fa_key'] = key.decode('utf-8')
+		key = b''
 
-		gen_qrcode(user_username, user_email, key)
+		if not request.session.exists('2fa_key'):
+			key = gen_token(user_username)
+			request.session['2fa_key'] = key.decode('utf-8')
+
+			generated_saved_token = base64.b32encode(key).decode('utf-8')
+
+			request.session['generated_saved_token'] = generated_saved_token
+
+			gen_qrcode(user_username, user_email, key)
+
+			gen_totp(key)
 
 		return render(
 			request,
 			"signins/2fa.html",
 			{
-				"gen": True,
 				'username': user_username,
-				'token': base64.b32encode(key).decode('utf-8'),
+				'token': generated_saved_token,
 			},
 		)
 
 
 
 	if request.method == 'POST':
-		user_username = request.user.username
-		shutil.rmtree('signins/tmp/'+user_username)
-		pass
+
+		if 'cancel_2fa' in request.POST:
+			user_username = request.user.username
+			path_to_img = 'signins/static/signins/tmp/'+user_username
+			if os.path.exists(path_to_img):
+				shutil.rmtree(path_to_img)
+
+			del request.session['2fa_key']
+			return redirect('/signins/success')
+
+		if 'verify_2fa' in request.POST:
+			user_totp = request.POST['totp']
+			user_username = request.user.username
+			if len(user_totp) == 6:
+				try:
+					user_totp = int(user_totp)
+
+				except:
+					print("========== exception ocurred ==========")
+					return render(
+						request,
+						'signins/2fa.html',
+						{
+							'error_message': 'Invalid TOTP',
+							'username': user_username,
+							'token': request.session['generated_saved_token'],
+						},
+    	            )
+
+				else:
+					key = request.session['2fa_key']
+					key = bytes(key, 'utf-8')
+
+					totp = gen_totp(key)
+
+					if int(totp) == user_totp:
+						print("========== totp matched ==========")
+						return HttpResponse('<h1>TOTP MATCHED SUCCESS!</h1>')
+
+					else:
+						print("========== totp doesnt match ==========")
+						return render(
+                 		   request,
+	                 	   'signins/2fa.html',
+	                    	{
+		                        'error_message': 'Invalid TOTP',
+								'username': user_username,
+								'token': request.session['generated_saved_token'],
+							},
+	    	            )
+
+
+			else:
+				print("========== totp length should be 6 ==========")
+				return render(
+					request,
+					'signins/2fa.html',
+					{
+						'error_message': 'Invalid TOTP',
+						'username': user_username,
+						'token': request.session['generated_saved_token'],
+					},
+				)
 
 
 
-	return HttpResponse("hmm")
+	return redirect('/signins/sucess')
 
 
 
@@ -302,3 +370,5 @@ def gen_totp(key):
 	binary = int(hmac_sha1[(offset * 2):((offset * 2) + 8)], 16) & 0x7fffffff
 	totp = str(binary)[-length:]
 	print(totp)
+
+	return totp

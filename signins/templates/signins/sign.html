@@ -62,8 +62,8 @@
 				<form action="{% url 'signins:signin' %}" method="post">
 					{% csrf_token %}
 
-					{% if error_message %}
-						</p><strong>{{ error_message }}</strong></p>
+					{% if login_failed_message %}
+						</p><strong>{{ login_failed_message }}</strong></p>
 					{% endif %}
 
 					<div class="text-center mb-3">
@@ -144,8 +144,8 @@
 				<form action="{% url 'signins:register' %}" method="post">
 					{% csrf_token %}
 
-					{% if error_message %}
-						</p><strong>{{ error_message }}</strong></p>
+					{% if registration_failed_message %}
+						</p><strong>{{ registration_failed_message }}</strong></p>
 					{% endif %}
 
 					<div class="text-center mb-3">
@@ -228,64 +228,62 @@
 		</div>
 		<!-- Pills content -->
 
-	<script>
+		<script>
 
-		function password_show_hide() {
-			var x = document.getElementById("loginPassword");
-			var show_eye = document.getElementById("show_eye");
-			var hide_eye = document.getElementById("hide_eye");
-			hide_eye.classList.remove("d-none");
+			function password_show_hide() {
+				var x = document.getElementById("loginPassword");
+				var show_eye = document.getElementById("show_eye");
+				var hide_eye = document.getElementById("hide_eye");
+				hide_eye.classList.remove("d-none");
 
-			if (x.type === "password") {
-				x.type = "text";
-				show_eye.style.display = "none";
-				hide_eye.style.display = "block";
-			} else {
-				x.type = "password";
-				show_eye.style.display = "block";
-				hide_eye.style.display = "none";
+				if (x.type === "password") {
+					x.type = "text";
+					show_eye.style.display = "none";
+					hide_eye.style.display = "block";
+				} else {
+					x.type = "password";
+					show_eye.style.display = "block";
+					hide_eye.style.display = "none";
+				}
 			}
-		}
 
 
-		function register_password_show_hide() {
-            var x = document.getElementById("registerPassword");
-            var show_eye = document.getElementById("register_password_show_eye");
-            var hide_eye = document.getElementById("register_password_hide_eye");
-            hide_eye.classList.remove("d-none");
+			function register_password_show_hide() {
+	            var x = document.getElementById("registerPassword");
+	            var show_eye = document.getElementById("register_password_show_eye");
+	            var hide_eye = document.getElementById("register_password_hide_eye");
+	            hide_eye.classList.remove("d-none");
 
-            if (x.type === "password") {
-                x.type = "text";
-                show_eye.style.display = "none";
-                hide_eye.style.display = "block";
-            } else {
-                x.type = "password";
-                show_eye.style.display = "block";
-                hide_eye.style.display = "none";
-            }
-        }
-
-
-		function register_repeat_password_show_hide() {
-            var x = document.getElementById("registerRepeatPassword");
-            var show_eye = document.getElementById("register_repeat_password_show_eye");
-            var hide_eye = document.getElementById("register_repeat_password_hide_eye");
-            hide_eye.classList.remove("d-none");
-
-            if (x.type === "password") {
-                x.type = "text";
-                show_eye.style.display = "none";
-                hide_eye.style.display = "block";
-            } else {
-                x.type = "password";
-                show_eye.style.display = "block";
-                hide_eye.style.display = "none";
-            }
-        }
+	            if (x.type === "password") {
+	                x.type = "text";
+	                show_eye.style.display = "none";
+	                hide_eye.style.display = "block";
+	            } else {
+	                x.type = "password";
+	                show_eye.style.display = "block";
+	                hide_eye.style.display = "none";
+	            }
+	        }
 
 
+			function register_repeat_password_show_hide() {
+	            var x = document.getElementById("registerRepeatPassword");
+	            var show_eye = document.getElementById("register_repeat_password_show_eye");
+	            var hide_eye = document.getElementById("register_repeat_password_hide_eye");
+	            hide_eye.classList.remove("d-none");
 
-	</script>
+	            if (x.type === "password") {
+ 	                x.type = "text";
+	                show_eye.style.display = "none";
+	                hide_eye.style.display = "block";
+	            } else {
+	                x.type = "password";
+	                show_eye.style.display = "block";
+	                hide_eye.style.display = "none";
+	            }
+	        }
+
+		</script>
 
 
 	</body>

@@ -24,32 +24,32 @@ import uuid
 
 from .models import TwoFA, BackupCode
 
+
+
+# Landing view of this signinsapp
 def index(request):
 	"""
-		Redirects to logged in page if the user is logged in.
-		Otherwise, takes you to registration page
+		Redirects to success page if the user is signed in.
+		Otherwise, takes you to registration page.
 	"""
 	if request.user.is_authenticated:
-		return redirect("/signins/success")
+		return redirect('/signins/success')
 
-	#return redirect("/signins/register")
-	return render(request, "signins/sign.html")
-
+	return render(request, 'signins/sign.html')
 
 
+# Helps in registering the user.
 def register(request):
 	"""Displays signup form as well as handles the registration mechanism"""
 	if request.method == "GET":
 		return render(
 			request,
-			"signins/sign.html",
+			'signins/sign.html',
 			{
-				"registration_tab": True,
+				'registration_tab': True,
 			},
 		)
 
-	#uname = request.POST['username']
-	#pword = request.POST['password']
 
 	fname = request.POST['first_name_register']
 	lname = request.POST['last_name_register']
@@ -58,7 +58,8 @@ def register(request):
 	pword = request.POST['password_register']
 	pword_repeat = request.POST['repeat_password_register']
 
-	tnc_checkbox_register = request.POST['tnc_checkbox_register']
+
+	tnc_checkbox_register = request.POST.get('tnc_checkbox_register')
 
 	try:
 		# Try creating a new user
@@ -72,13 +73,13 @@ def register(request):
 
 	except:
 
-        # Redisplay the registration because registration failed.
+        # Redisplay the registration form because registration failed.
 		return render(
 			request,
-			"signins/sign.html",
+			'signins/sign.html',
 			{
-				"error_message": "Registration failed. Try again.",
-				"registration_tab": True,
+				'registration_failed_message': 'Registration failed. Try again.',
+				'registration_tab': True,
 			},
 		)
 
@@ -89,112 +90,126 @@ def register(request):
 		# Always return an HttpResponseRedirect after successfully dealing
 		# with POST data. This prevents data from being posted twice if
 		# user hits the back button.
-		return redirect("/signins/signin/")
+		return redirect('/signins/signin')
 
 
-def page_two(request):
-    sess_var = request.session.get('sessvar', None)
-    return HttpResponse(f'hi too: {sess_var}')
-
-def page_three(request):
-    request.session['sessvar'] = "FUCK"
-    return HttpResponse(f'I just set a session var...')
 
 
+# Helps with signing the user in.
 def signin(request):
 	"""Displays signin form as well as handles the signin mechanism"""
 
-	if request.method == "GET":
-		return render(request, "signins/sign.html")
+	if request.method == 'GET':
+		return render(request, 'signins/sign.html')
 
-	return redirect('/signins/page_two')
+	if request.method == 'POST':
 
-	uname = request.POST["username_login"]
-	pword = request.POST["password_login"]
+		uname = request.POST["username_login"]
+		pword = request.POST["password_login"]
 
-	remember_me_checkbox_login = request.POST['remember_me_checkbox_login']
+		remember_me_checkbox_login = request.POST.get('remember_me_checkbox_login')
 
-	user = authenticate(request, username=uname, password=pword)
-	print('==========user=========',user, type(user))
+		# Authenticate the user, don't login yet
+		# because we still not to check whether the user has 2fa enabled.
+		user = authenticate(request, username=uname, password=pword)
 
-	request.session['authenticate_uname'] = 291
-
-	if uname in request.session:
-		print("12345")
-	else:
-		print(54321)
-
-	#print(request.session['authenticate_user'])
-
-	if not request.session.exists('authenticate_uname'):
-		print('========== why no exist? =========2')
-		print('user idddddd', user.id)
-
-	else:
-		print('========== yayyy exists ==========2')
+		for key, value in request.session.items():
+			print('sesh: {} => {}'.format(key, value))
 
 
-	#request.session['authenticated_user'] = user
+		if user is not None:
+			# Since the user is authenticated, login and then redirect to success page
+			# only if she has not enabled 2fa.
+			# Otherwise, redirect to 2nd page in login process.
+			if hasattr(user, 'twofa'):
 
-	if user is not None:
-		# Since the user is authenticated, login and then redirect to success page.
-		#login(request, user)
-		request.session['authenticate_uname'] = uname
-		request.session['authenticate_pword'] = pword
-		#return redirect("/signins/verify", permanent=True)
-		#return redirect(reverse('signins:verify2fa', args=(user,)))
-		return redirect('/signins/verify', us=user)
-	else:
+				# Store the session variables to retrieve the username and password
+				# in the 2nd step of the login process.
+				# That's because we have not yet logged the user in, so we do not have
+				# access to username and password in the next view.
 
-		# Authentication failed. Redisplay the login form.
-		return render(
-			request,
-			"signins/sign.html",
-			{
-				"error_message": "Login failed. Try again.",
-			},
-		)
+				request.session['authenticate_uname'] = uname
+				request.session['authenticate_pword'] = pword
 
-def verify_2fa(request, **kwargs):
-	'''
-	if not request.user.is_authenticated:
-		print('========== authenticated or not? ==========')
-		print('==========request.user==========', request.user)
-		d = request.session.exists('hkhi')
-		return redirect('/signins')
-	'''
+				return redirect('/signins/verify')
+
+			else:
+				# Log the user in and then directly go to success page
+				# since the user has not enabled 2fa.
+				login(request, user)
+				return redirect('/signins/success')
+
+		else:
+
+			# Authentication failed. Redisplay the login form.
+			return render(
+				request,
+				'signins/sign.html',
+				{
+					'login_failed_message': 'Login failed. Try again.',
+				},
+			)
+
+
+
+
+
+# Helps with 2nd factor authentication
+def verify_2fa(request):
+	'''Displqy the verification page in the 2nd step of the login process.'''
+
 
 	if request.method == 'GET':
-		if not request.session.exists('authenticate_uname'):
-			print('========== why no exist? =========')
+
+		# Do this instead of checking whethwr the user is authenticated because
+		# user is AnonymousUser at this point, meaning, she is obviously not authenticated.
+		# Doing this prevents the user from accessing this page by manually typing the url.
+		#
+		# This session variable would only exist if the user was redirected here
+		# from 1st step of the login process rather than manually typing the url.
+		if not 'authenticate_uname' in request.session:
 			return redirect('/signins')
 
-		print('========== yayyy exists ==========')
-
 		return render(request, 'signins/verify_2fa.html')
+
+
 
 	if request.method == 'POST':
 
 		if 'cancel_verifying_2fa' in request.POST:
+			# Logout seems to really be required since the user cannot post request by manually
+			# typing the url.
+			# But logout so that the session is cleared.
 			logout(request)
 			return redirect('/signins')
 
 		elif 'verify_2fa' in request.POST:
 
+			uname = request.session.get('authenticate_uname')
+			pword = request.session.get('authenticate_pword')
+
+			# The user will surely be authenticated because this page is accessible only
+			# if the user was already authenticated.
+			#
+			# The reason fot re-authentication is that the session user is still AnonymousUser
+			# who is not logged in by us yet.
+			user = authenticate(request, username=uname, password=pword)
+
+
+			# If the user chooses to login via TOTP.
 			if 'totp' in request.POST:
 				totp_user = request.POST['totp']
 
-				key = bytes(request.user.twofa.token, 'utf-8')
-				totp = gen_totp(key)
+				key = bytes(user.twofa.token, 'utf-8')
+				totp = gen_totp(key) # this is the TOTP we need to compare with
+
+				print("totp:", totp)
+
 
 				if totp_user == totp:
-					print('========== successfully verified via totp ==========')
-
-					uname = request.session['authenticate_uname']
-					pword = request.session['authenticate_pword']
-
-					user = authenticate(request, username=uname, password=pword)
 					login(request, user)
+
+					# Clear the session variables as we have no need of them.
 					del request.session['authenticate_uname']
 					del request.session['authenticate_pword']
 
@@ -209,14 +224,10 @@ def verify_2fa(request, **kwargs):
 						},
 					)
 
-			elif 'backupCode' in request.POST:
-				if request.user.twofa.verify_using_backup_code(request.POST['backupCode']):
+			# If the user chooses to login via Backup Code.
+			elif 'backup_code' in request.POST:
+				if user.twofa.verify_using_backup_code(request.POST['backupCode']):
 
-
-					uname = request.session['authenticate_uname']
-					pword = request.session['authenticate_pword']
-
-					user = authenticate(request, username=uname, password=pword)
 					login(request, user)
 					del request.session['authenticate_uname']
 					del request.session['authenticate_pword']
@@ -238,7 +249,7 @@ def verify_2fa(request, **kwargs):
 
 
 
-def success(request):
+def success(request, **kwargs):
 	"""
 		Displays a success page with a Change Password, Delete Account
 		and Logout button, only to the logged in user.

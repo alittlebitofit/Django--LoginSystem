@@ -12,17 +12,28 @@
         <form action="{% url 'signins:verify2fa' %}" method="post">
             {% csrf_token %}
 
-			{% if incorrect_totp %}
-				<p>{{ incorrect_totp }}</p>
-			{% elif incorrect_backupcode %}
-				<p>{{ incorrect_backupcode }}</p>
+			{% if incorrect_totp_message %}
+				<p>{{ incorrect_totp_message }}</p>
+			{% elif incorrect_backupcode_message %}
+				<p>{{ incorrect_backupcode_message }}</p>
 			{% endif %}
 
-			<input type="number" id="totpOrbackupcodeId" name="totp">
+			{% if not enter_backup_code %}
+			<input type="number" id="totp_or_backupcode_Id" name="user_input_totp">
 			<br><br>
 
-			<button type="button" onclick="change_input_method()" id="toggleId">Enter Backup Code instead</button>
+			<button type="button" onclick="change_input_method()" id="toggle_button_Id">Enter Backup Code instead</button>
 			<br><br>
+
+			{% else %}
+
+			<input type="text" id="totp_or_backupcode_Id" name="user_input_backup_code">
+			<br><br>
+
+			<button type="button" onclick="change_input_method()" id="toggle_button_Id">Enter TOTP instead</button>
+			<br><br>
+
+			{% endif %}
 
 			<input type="submit" name="cancel_verifying_2fa" value="Cancel">
 			<br><br>
@@ -35,26 +46,20 @@
 		<script>
 			function change_input_method() {
 
-				console.log("it seems to not be working");
-
-				let input_element = document.querySelector("#totpOrbackupcodeId");
-				let toggle_element = document.querySelector("#toggleId");
+				let input_element = document.querySelector("#totp_or_backupcode_Id");
+				let toggle_button = document.querySelector("#toggle_button_Id");
 
 				if (input_element.type == "number") {
 					input_element.type = "text";
-					input_element.name = "backupCode";
+					input_element.name = "user_input_backup_code";
 
-					toggle_element.textContent = "Enter TOTP instead";
+					toggle_button.textContent = "Enter TOTP instead";
 				} else {
 					input_element.type = "number";
-					input_element.name = "totp";
+					input_element.name = "user_input_totp";
 
-					toggle_element.textContent = "Enter Backup Code instead";
+					toggle_button.textContent = "Enter Backup Code instead";
 				}
-
-
-				console.log("it seems to not be working2");
-
 
 			}
 		</script>

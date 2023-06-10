@@ -16,20 +16,20 @@
                 </p><strong>{{ error_message }}</strong></p>
             {% endif %}
 
-			<input type="submit" name="changePassword" value="Change Password">
+			<input type="submit" name="change_password_button" value="Change Password">
 			<br><br>
 
-            <input type="submit" name="deleteAccount" value="Delete">
+            <input type="submit" name="delete_account_button" value="Delete">
 			<br><br>
 
-            <input type="submit" name="logoutUser" value="Logout">
+            <input type="submit" name="logout_button" value="Logout">
 			<br><br>
 
 			{% if 2fa_exists %}
-				<input type="submit" name="disable_2fa" value="Disable 2FA">
-				<input type="submit" name="change_2fa" value="Change 2FA">
+				<input type="submit" name="disable_2fa_button" value="Disable 2FA">
+				<input type="submit" name="change_2fa_button" value="Change 2FA">
 			{% else %}
-				<input type="submit" name="enable_2fa" value="Enable 2FA">
+				<input type="submit" name="enable_2fa_button" value="Enable 2FA">
 				<br><br>
 			{% endif %}
         </form>

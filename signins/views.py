@@ -26,12 +26,12 @@ from .models import TwoFA, BackupCode
 
 
 
-# Landing view of this signinsapp
+# Landing view of this signins app.
 def index(request):
-	"""
+	'''
 		Redirects to success page if the user is signed in.
 		Otherwise, takes you to registration page.
-	"""
+	'''
 	if request.user.is_authenticated:
 		return redirect('/signins/success')
 
@@ -40,7 +40,15 @@ def index(request):
 
 # Helps in registering the user.
 def register(request):
-	"""Displays signup form as well as handles the registration mechanism"""
+	'''Displays signup form as well as handles the registration mechanism'''
+
+
+	# If the user is already authenticated then redirect to success page.
+	# This situation occurs if the user manually types in the url.
+	if request.user.is_authenticated:
+		return redirect('/signins/success')
+
+
 	if request.method == "GET":
 		return render(
 			request,
@@ -50,72 +58,80 @@ def register(request):
 			},
 		)
 
+	if request.method == 'POST':
 
-	fname = request.POST['first_name_register']
-	lname = request.POST['last_name_register']
-	uname = request.POST['username_register']
-	email = request.POST['email_register']
-	pword = request.POST['password_register']
-	pword_repeat = request.POST['repeat_password_register']
+		fname = request.POST.get('first_name_register')
+		lname = request.POST.get('last_name_register')
+		uname = request.POST.get('username_register')
+		email = request.POST.get('email_register')
+		pword = request.POST.get('password_register')
+		pword_repeat = request.POST.get('repeat_password_register')
 
 
-	tnc_checkbox_register = request.POST.get('tnc_checkbox_register')
+		tnc_checkbox_register = request.POST.get('tnc_checkbox_register')
 
-	try:
-		# Try creating a new user
-		user = User.objects.create_user(
-			first_name = fname,
-			last_name = lname,
-			username = uname,
-			email = email,
-			password = pword,
-		)
+		try:
+			# Try creating a new user.
+			user = User.objects.create_user(
+				first_name = fname,
+				last_name = lname,
+				username = uname,
+				email = email,
+				password = pword,
+			)
 
-	except:
+		except:
+	        # Redisplay the registration form because registration failed.
+			return render(
+				request,
+				'signins/sign.html',
+				{
+					'registration_failed_message': 'Registration failed. Try again.',
+					'registration_tab': True,
+				},
+			)
 
-        # Redisplay the registration form because registration failed.
-		return render(
-			request,
-			'signins/sign.html',
-			{
-				'registration_failed_message': 'Registration failed. Try again.',
-				'registration_tab': True,
-			},
-		)
+		else:
+			# Successfully created a new user and it was automatically saved in the db.
 
-	else:
+			# Always return an HttpResponseRedirect after successfully dealing
+			# with POST data. This prevents data from being posted twice if
+			# user hits the back button.
+			return redirect('/signins/signin')
 
-		# Successfully created a new user and it was automatically saved in the db.
 
-		# Always return an HttpResponseRedirect after successfully dealing
-		# with POST data. This prevents data from being posted twice if
-		# user hits the back button.
-		return redirect('/signins/signin')
-
+	# Redirect to home page of the app in case any other METHOD requests were used.
+	return redirect('/signins')
 
 
 
 # Helps with signing the user in.
 def signin(request):
-	"""Displays signin form as well as handles the signin mechanism"""
+	'''Displays signin form as well as handles the signin mechanism'''
 
+	# If the user is already authenticated then redirect to success page.
+	# This situation occurs if the user manually types in the url.
+	if request.user.is_authenticated:
+		return redirect('/signins/success')
+
+
+	# Load the signin page.
 	if request.method == 'GET':
 		return render(request, 'signins/sign.html')
 
+
+
+
 	if request.method == 'POST':
 
-		uname = request.POST["username_login"]
-		pword = request.POST["password_login"]
+		uname = request.POST.get('username_login')
+		pword = request.POST.get('password_login')
 
 		remember_me_checkbox_login = request.POST.get('remember_me_checkbox_login')
 
 		# Authenticate the user, don't login yet
 		# because we still not to check whether the user has 2fa enabled.
 		user = authenticate(request, username=uname, password=pword)
-
-		for key, value in request.session.items():
-			print('sesh: {} => {}'.format(key, value))
-
 
 		if user is not None:
 			# Since the user is authenticated, login and then redirect to success page
@@ -151,6 +167,9 @@ def signin(request):
 			)
 
 
+	# Redirect to home page of the app in case any other METHOD requests were used.
+	return redirect('/signins')
+
 
 
 
@@ -161,7 +180,7 @@ def verify_2fa(request):
 
 	if request.method == 'GET':
 
-		# Do this instead of checking whethwr the user is authenticated because
+		# Do this instead of checking whether the user is authenticated because
 		# user is AnonymousUser at this point, meaning, she is obviously not authenticated.
 		# Doing this prevents the user from accessing this page by manually typing the url.
 		#
@@ -170,16 +189,17 @@ def verify_2fa(request):
 		if not 'authenticate_uname' in request.session:
 			return redirect('/signins')
 
+		# If all good, then render the 2fa verification page.
 		return render(request, 'signins/verify_2fa.html')
+
+
 
 
 
 	if request.method == 'POST':
 
 		if 'cancel_verifying_2fa' in request.POST:
-			# Logout seems to really be required since the user cannot post request by manually
-			# typing the url.
-			# But logout so that the session is cleared.
+			# Logout so that the session is cleared.
 			logout(request)
 			return redirect('/signins')
 
@@ -188,28 +208,26 @@ def verify_2fa(request):
 			uname = request.session.get('authenticate_uname')
 			pword = request.session.get('authenticate_pword')
 
-			# The user will surely be authenticated because this page is accessible only
+			# The user would surely be authenticated at this point because this page is accessible only
 			# if the user was already authenticated.
 			#
-			# The reason fot re-authentication is that the session user is still AnonymousUser
+			# The reason fot re-authentication is that the user is still AnonymousUser
 			# who is not logged in by us yet.
 			user = authenticate(request, username=uname, password=pword)
 
 
 			# If the user chooses to login via TOTP.
-			if 'totp' in request.POST:
-				totp_user = request.POST['totp']
+			if 'user_input_totp' in request.POST:
+				totp_user = request.POST.get('user_input_totp')
 
 				key = bytes(user.twofa.token, 'utf-8')
 				totp = gen_totp(key) # this is the TOTP we need to compare with
-
-				print("totp:", totp)
 
 
 				if totp_user == totp:
 					login(request, user)
 
-					# Clear the session variables as we have no need of them.
+					# Clear the session variables as we have no further need.
 					del request.session['authenticate_uname']
 					del request.session['authenticate_pword']
 
@@ -220,15 +238,21 @@ def verify_2fa(request):
 						request,
 						'signins/verify_2fa.html',
 						{
-							'incorrect_totp': 'Invalid TOTP. Please try again.',
+							'incorrect_totp_message': 'Invalid TOTP. Please try again.',
 						},
 					)
+
 
 			# If the user chooses to login via Backup Code.
-			elif 'backup_code' in request.POST:
-				if user.twofa.verify_using_backup_code(request.POST['backupCode']):
+			elif 'user_input_backup_code' in request.POST:
+				if user.twofa.verify_using_backup_code(request.POST.get('user_input_backup_code')):
+
+					# This block is entered only when the backup code is valid.
+					# So simply log the user in, clear the session and redirect
+					# to the success page.
 
 					login(request, user)
+
 					del request.session['authenticate_uname']
 					del request.session['authenticate_pword']
 
@@ -236,37 +260,47 @@ def verify_2fa(request):
 
 
 				else:
-					logout(request)
+
+					# Invalid backup code by user.
 					return render(
 						request,
 						'signins/verify_2fa.html',
 						{
-							'incorrect_backupcode': 'Invalid Backup Code. Please try again.',
+							'incorrect_backupcode_message': 'Invalid Backup Code. Please try again.',
+							'enter_backup_code': True,
 						},
 					)
 
+	# If any other METHOD-requests are used to access this page.
 	return redirect('/signins')
 
 
 
-def success(request, **kwargs):
-	"""
+# Helps with displaying the success page.
+def success(request):
+	'''
 		Displays a success page with a Change Password, Delete Account
 		and Logout button, only to the logged in user.
-		Otherwise, it redirects to signin page.
+		Otherwise, it redirects to Signin page.
 
 		Checks whether the user is logged in first.
 		Then proceeds to either change the password, delete the account
 			or logout depending upon what the user wants.
-		Finally, redirects to Signin page.
-	"""
 
-	# If the user is not authentic, then redirect to signin page.
+		Finally, redirects to Signin page.
+	'''
+
+	# If the user is not authenticated, meaning
+	# the user might have manually typed the url without logging in,
+	# then redirect to signin page.
 	if not request.user.is_authenticated:
-		return redirect("/signins")
+		return redirect('/signins')
 
 	# GET request always renders a page, a success page in this case.
-	if request.method == "GET":
+	if request.method == 'GET':
+
+		# This conditions allows us to display "Disable 2FA"
+		# instead of "Enable 2FA" because the user has already enabled it.
 		if hasattr(request.user, 'twofa'):
 			return render(
 				request,
@@ -276,76 +310,91 @@ def success(request, **kwargs):
 				},
 			)
 
-		return render(request, "signins/success.html")
+		return render(request, 'signins/success.html')
 
 
 	# POST request handling
 	if request.method == 'POST':
 
-		if "changePassword" in request.POST:
-			return redirect("/signins/changePassword")
+		if 'change_password_button' in request.POST:
+			return redirect('/signins/changePassword')
 
-		elif "deleteAccount" in request.POST:
+		elif 'delete_account_button' in request.POST:
 			request.user.delete()
-			return redirect("/signins/register")
+			return redirect('/signins/register')
 
-		elif "logoutUser" in request.POST:
+		elif 'logout_button' in request.POST:
 			logout(request)
-			return redirect("/signins")
+			return redirect('/signins')
 
-		elif "enable_2fa" in request.POST:
-			return redirect("/signins/set-2fa")
+		elif 'enable_2fa_button' in request.POST:
+			return redirect('/signins/set-2fa')
 
-		elif 'disable_2fa' in request.POST:
+		elif 'disable_2fa_button' in request.POST:
 			request.user.twofa.delete()
 			return redirect('/signins')
 
-		elif 'change_2fa' in request.POST:
+		elif 'change_2fa_button' in request.POST:
 			return redirect('/signins/set-2fa')
 
+	# If any other Method requested this, then redirect to home page of the app.
+	return redirect('/signins/success')
 
 
-	return HttpResponse('<h1 style="font-size: 64px; padding: 16px;">It will be alright</h1>')
+
+
 
 
 # Changes Password.
 def changePassword(request):
 
-	# If the user is not authentic, then redirect to signin page.
+	# If the user is not authenticated, then redirect to signin page.
 	if not request.user.is_authenticated:
-		return redirect("/signins")
+		return redirect('/signins')
 
 	# A GET request, so render an appropriate page.
-	if request.method == "GET":
-		return render(request, "signins/changePassword.html")
+	if request.method == 'GET':
+		return render(request, 'signins/change_password.html')
 
-	# POST request handling
-	if "cancel" in request.POST:
-		return redirect("/signins/success")
+	# POST-request handling
+	if 'cancel_new_password_button' in request.POST:
+		return redirect('/signins/success')
 
-	elif "change" in request.POST:
+	elif 'change_password_button' in request.POST:
 		# If password is empty, display error.
-		if request.POST["new_password"] == "":
+		if request.POST.get('new_password') == '':
 			return render(
 				request,
-				"signins/changePassword.html",
+				'signins/change_password.html',
 				{
-					"empty_password": "Password cannot be empty.",
+					'empty_password_error_message': 'Password cannot be empty.',
 				},
 			)
 
 		# Else change the password and manually save it in db.
+		# Although at this point there's no constraint on password.
 		else:
-			request.user.set_password(request.POST["new_password"])
+			request.user.set_password(request.POST.get('new_password'))
 			request.user.save()
 			logout(request)
-			return redirect("/signins")
+			return redirect('/signins')
+
+	# If any other Method requestes this page, redirect to signin page.
+	return redirect('/signins')
 
 
+
+# Sets a new 2fa token and backup codes.
 def set2fa(request):
+	'''
+		Whether the user wants to enable or change the 2fa token,
+		this single function is suffice for both.
+	'''
 
+	# This prevents the unauthorized users from accessing this page
+	# by manually typing the url.
 	if not request.user.is_authenticated:
-		return redirect("/signins")
+		return redirect('/signins')
 
 
 
@@ -354,10 +403,14 @@ def set2fa(request):
 		user_username = request.user.username
 		user_email = request.user.email
 
-		key = b''
-		backup_codes_list = []
+		# It won't be empty if the user refreshes the page.
+		generated_saved_token = request.session.get('generated_saved_token')
 
-		if not request.session.exists('2fa_key'):
+		# Use already generated backup codes if the user refreshes the page.
+		backup_codes_list = request.session.get('backup_codes_list')
+
+		# This preventw generation of new token on page refresh.
+		if not '2fa_key' in request.session:
 			key = gen_token(user_username)
 			request.session['2fa_key'] = key.decode('utf-8')
 
@@ -371,133 +424,111 @@ def set2fa(request):
 			backup_codes_list = gen_backup_codes()
 			request.session['backup_codes_list'] = backup_codes_list
 
-
+		# Render the page with the token and backup codes.
 		return render(
 			request,
-			"signins/set_2fa.html",
+			'signins/set_2fa.html',
 			{
-				'username': user_username,
+				'username': user_username, # This is used by static image loading template
 				'token': generated_saved_token,
 				'backup_codes': backup_codes_list,
 			},
 		)
 
 
+
+
+
 	if request.method == 'POST':
 
-
 		# if the 2fa process is cancelled
-		if 'cancel_2fa' in request.POST:
-			user_username = request.user.username
-			path_to_img = 'signins/static/signins/tmp/'+user_username
+		if 'cancel_2fa_button' in request.POST:
+
+			# Delete the qr code if not already deleted.
+			# This qr code was temporary.
+			path_to_img = 'signins/static/signins/tmp/'+request.user.username
 			if os.path.exists(path_to_img):
 				shutil.rmtree(path_to_img)
 
+			# Clear the session.
 			del request.session['2fa_key']
 			del request.session['generated_saved_token']
 			del request.session['backup_codes_list']
 
+			# Go back to the success page.
 			return redirect('/signins/success')
 
 
 
 
 
-		# if the user proceeds to verify with totp
-		if 'verify_2fa' in request.POST:
+		# if the user proceeds to confirm 2fa with totp
+		if 'verify_2fa_button' in request.POST:
 
 			user_username = request.user.username
 
-			user_totp = request.POST['totp']
-			generated_token = request.session['generated_saved_token']
-			backup_codes_list = request.session['backup_codes_list']
+			user_totp = request.POST.get('user_input_totp')
+			generated_token = request.session.get('generated_saved_token')
+			backup_codes_list = request.session.get('backup_codes_list')
 
-			if len(user_totp) == 6:
-				try:
-					user_totp = int(user_totp)
+			key = request.session.get('2fa_key')
+			key = bytes(key, 'utf-8')
 
-				except:
-					print("========== exception ocurred ==========")
-					return render(
-						request,
-						'signins/set_2fa.html',
-						{
-							'error_message': 'Invalid TOTP',
-							'username': user_username,
-							'token': generated_token,
-							'backup_codes': backup_codes_list,
-						},
-    	            )
+			totp = gen_totp(key)
 
-				else:
-					key = request.session['2fa_key']
-					key = bytes(key, 'utf-8')
+			# If the TOTP is correct.
+			if totp == user_totp:
 
-					totp = gen_totp(key)
+				# Delete old token first if it exists
+				# otherwise old backup codes won't be deleted.
+				if hasattr(request.user, 'twofa'):
+					request.user.twofa.delete()
 
-					if int(totp) == user_totp:
-						print("========== totp matched ==========")
+				# Save the new token in db.
+				token_to_save = TwoFA(user=request.user, token=generated_token)
+				token_to_save.save()
 
-						if hasattr(request.user, 'twofa'):
-							request.user.twofa.delete()
-
-						token_to_save = TwoFA(user=request.user, token=generated_token)
-						token_to_save.save()
-
-						for code in backup_codes_list:
-							backup_code = BackupCode(twofa=token_to_save, code=code)
-							backup_code.save()
-
-						path_to_img = 'signins/static/signins/tmp/'+user_username
-						if os.path.exists(path_to_img):
-							shutil.rmtree(path_to_img)
-
-						del request.session['2fa_key']
-						del request.session['generated_saved_token']
-						del request.session['backup_codes_list']
-
-						logout(request)
-
-						return redirect('/signins')
-
-					else:
-						print("========== totp doesnt match ==========")
-						return render(
-                 		   request,
-	                 	   'signins/2fa.html',
-	                    	{
-		                        'error_message': 'Invalid TOTP',
-								'username': user_username,
-								'token': generated_token,
-								'backup_codes': backup_codes_list,
-							},
-	    	            )
+				# Save the new backuo codes in db.
+				for code in backup_codes_list:
+					backup_code = BackupCode(twofa=token_to_save, code=code)
+					backup_code.save()
 
 
+				# Delete this temporary qr code if it exists.
+				path_to_img = 'signins/static/signins/tmp/'+user_username
+				if os.path.exists(path_to_img):
+					shutil.rmtree(path_to_img)
+
+				# Logout, it automatically clears out the session.
+				logout(request)
+
+				# Redirect to login page.
+				return redirect('/signins')
+
+
+			# If the TOTP is incorrect.
 			else:
-				print("========== totp length should be 6 ==========")
+
 				return render(
 					request,
 					'signins/set_2fa.html',
 					{
-						'error_message': 'Invalid TOTP',
+						'invalid_totp_message': 'Invalid TOTP',
 						'username': user_username,
 						'token': generated_token,
 						'backup_codes': backup_codes_list,
 					},
 				)
 
-
-
-	return redirect('/signins/sucess')
-
+	# Return to success page if this page is accessed via any other METHOD requests.
+	return redirect('/signins/success')
 
 
 
 
+# Helper function - generates a 32-character 2FA token.
 def gen_token(user_username):
-
-	""" Step 1: Generating a base32-encoded token """
+	'''Step 1: Generating a base32-encoded token'''
 
 	random_number = random.randint(1000000000, 9999999999)
 	current_time = int(time.time())
@@ -516,37 +547,38 @@ def gen_token(user_username):
 	return key
 
 
+
+
+# Helper function - generates a QR code.
 def gen_qrcode(user_username, user_email, key):
+	'''Step 2: Generating QR Code'''
 
-	""" Step 3: Generating QR Code """
-
-	# Create a temporary directory to store qrcode.
+	# Create a temporary directory to store qrcode if it doesn't already exist.
 	path_to_img = 'signins/static/signins/tmp/'+user_username
-
 	if not os.path.exists(path_to_img):
 		os.makedirs(path_to_img)
 
-	# Generating QR Code
+	# Location to store QR code temporarily.
 	image_path = path_to_img+'/token_qr.png'
 
+	# Token.
 	token = base64.b32encode(key)
 
 	qr_string = 'otpauth://totp/Login-System:' + user_email + '?secret=' + token.decode('utf-8') + '&issuer=Login-System&algorithm=SHA1&digits=6&period=30'
 
+	# This statement generates QR code.
 	img = qrcode.make(qr_string)
+
+	# This statement saves the QR code in a temporary location.
 	img.save(image_path)
 
-	#DELETE TMP FOLDER AFTER 2FA IS ENABLED OR EVEN IF 2FA IS CANCELLED
-	#os.rmdir('signins/tmp/q¹'+user_username)
-	#shutil.rmtree('signins/templates/signins/tmp/'+user_username)
 
 
 
 
-
+# Helper function - generates TOTP
 def gen_totp(key):
-
-	""" Step 2: Generating hmac hexdigest """
+	'''Step 3: Generating hmac hexdigest and TOTP'''
 
 	# length of OTP in digits
 	length = 6
@@ -564,17 +596,19 @@ def gen_totp(key):
 	offset = int(hmac_sha1[-1], 16)
 	binary = int(hmac_sha1[(offset * 2):((offset * 2) + 8)], 16) & 0x7fffffff
 	totp = str(binary)[-length:]
-	print(totp)
 
+	print(totp)
 	return totp
 
 
+
+
+
+# Helper function - generates backup codes.
 def gen_backup_codes():
 	backup_codes_list = []
 
 	for i in range(10):
 		backup_codes_list.append(uuid.uuid4().hex[:10].upper())
-
-	print(backup_codes_list)
 
 	return backup_codes_list

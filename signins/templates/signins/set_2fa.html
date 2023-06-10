@@ -17,10 +17,10 @@
 
 			<p>{{token}}</p>
 
-			{% if error_message  %}
-				<p>{{ error_message  }}</p>
+			{% if invalid_totp_message  %}
+				<p>{{ invalid_totp_message  }}</p>
 			{% endif  %}
-			<input type="number" maxlength=6 name="totp">
+			<input type="number" maxlength="6" name="user_input_totp">
 			<br><br>
 
 			<p>Backup codes</p>
@@ -30,9 +30,9 @@
 				{% endfor %}
 			</ul>
 
-			<input type="submit" name="cancel_2fa" value="Cancel">
+			<input type="submit" name="cancel_2fa_button" value="Cancel">
 
-			<input type="submit" name="verify_2fa" value="Verify">
+			<input type="submit" name="verify_2fa_button" value="Verify">
 
         </form>
 

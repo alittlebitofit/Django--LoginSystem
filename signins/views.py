@@ -317,7 +317,7 @@ def success(request):
 	if request.method == 'POST':
 
 		if 'change_password_button' in request.POST:
-			return redirect('/signins/changePassword')
+			return redirect('/signins/change-password')
 
 		elif 'delete_account_button' in request.POST:
 			request.user.delete()
@@ -361,8 +361,12 @@ def changePassword(request):
 		return redirect('/signins/success')
 
 	elif 'change_password_button' in request.POST:
+
+		password1 = request.POST.get('new_password')
+		password2 = request.POST.get('repeat_new_password')
+
 		# If password is empty, display error.
-		if request.POST.get('new_password') == '':
+		if password1 == '' or password2 == '':
 			return render(
 				request,
 				'signins/change_password.html',
@@ -374,7 +378,17 @@ def changePassword(request):
 		# Else change the password and manually save it in db.
 		# Although at this point there's no constraint on password.
 		else:
-			request.user.set_password(request.POST.get('new_password'))
+
+			if password1 != password2:
+				return render(
+					request,
+					'signins/change_password.html',
+					{
+						'passwords_dont_match_message': 'Passwords do not match. Please try again.',
+					},
+				)
+
+			request.user.set_password(password1)
 			request.user.save()
 			logout(request)
 			return redirect('/signins')

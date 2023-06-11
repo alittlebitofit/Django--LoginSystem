@@ -49,7 +49,7 @@ def register(request):
 		return redirect('/signins/success')
 
 
-	if request.method == "GET":
+	if request.method == 'GET':
 		return render(
 			request,
 			'signins/sign.html',

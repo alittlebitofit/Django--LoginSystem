@@ -63,7 +63,7 @@
 					{% csrf_token %}
 
 					{% if login_failed_message %}
-						</p><strong>{{ login_failed_message }}</strong></p>
+						<p><strong>{{ login_failed_message }}</strong></p>
 					{% endif %}
 
 					<div class="text-center mb-3">
@@ -126,7 +126,7 @@
 
 					<!-- Register buttons -->
 					<div class="text-center">
-						<p>Not a member? <a href="#!">Register</a></p>
+						<p>Not a member? <a href="" id="register_link_Id">Register</a></p>
 					</div>
 
 				</form>
@@ -145,7 +145,7 @@
 					{% csrf_token %}
 
 					{% if registration_failed_message %}
-						</p><strong>{{ registration_failed_message }}</strong></p>
+						<p><strong>{{ registration_failed_message }}</strong></p>
 					{% endif %}
 
 					<div class="text-center mb-3">
@@ -223,6 +223,14 @@
 
 					<!-- Submit button -->
 					<button type="submit" class="btn btn-primary btn-block mb-3">Sign up</button>
+
+
+					<!-- Signin buttons -->
+					<div class="text-center">
+						<p>Already a member? <a href="" id="login_link_Id">Login</a></p>
+					</div>
+
+
 				</form>
 			</div>
 		</div>
@@ -282,6 +290,49 @@
 	                hide_eye.style.display = "none";
 	            }
 	        }
+
+			document.querySelector("#register_link_Id").addEventListener("click", switchToRegisterTab);
+
+			document.querySelector("#login_link_Id").addEventListener("click", switchToLoginTab);
+
+
+			function switchToRegisterTab(event) {
+
+				event.preventDefault();
+
+				loginTab = document.querySelector("#tab-login");
+				loginTab.classList.remove("active");
+
+				loginSection = document.querySelector("#pills-login");
+				loginSection.classList.remove("active");
+
+				registerTab = document.querySelector("#tab-register");
+				registerTab.classList.add("active");
+
+				registerSection = document.querySelector("#pills-register");
+				registerSection.classList.add("active");
+
+			}
+
+			function switchToLoginTab(event) {
+
+				event.preventDefault();
+
+				loginTab = document.querySelector("#tab-login");
+				loginTab.classList.add("active");
+
+				loginSection = document.querySelector("#pills-login");
+				loginSection.classList.add("active");
+
+				registerTab = document.querySelector("#tab-register");
+				registerTab.classList.remove("active");
+
+				registerSection = document.querySelector("#pills-register");
+				registerSection.classList.remove("active");
+
+			}
+
+
 
 		</script>
 

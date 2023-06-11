@@ -321,6 +321,7 @@ def success(request):
 
 		elif 'delete_account_button' in request.POST:
 			request.user.delete()
+			logout(request)
 			return redirect('/signins/register')
 
 		elif 'logout_button' in request.POST:

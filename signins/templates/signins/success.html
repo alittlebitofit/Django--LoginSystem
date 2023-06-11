@@ -19,10 +19,10 @@
 			<input type="submit" name="change_password_button" value="Change Password">
 			<br><br>
 
-            <input type="submit" name="delete_account_button" value="Delete">
+            <input type="submit" onclick="return confirm_before_deleting_account()" name="delete_account_button" value="Delete">
 			<br><br>
 
-            <input type="submit" name="logout_button" value="Logout">
+            <input type="submit" onclick="return confirm_before_logout()" name="logout_button" value="Logout">
 			<br><br>
 
 			{% if 2fa_exists %}
@@ -33,6 +33,21 @@
 				<br><br>
 			{% endif %}
         </form>
+
+
+		<script>
+
+			function confirm_before_deleting_account() {
+				return confirm("Are you sure you want to delete the account?");
+			}
+
+			function confirm_before_logout() {
+				return confirm("Are you sure you want to log out?");
+			}
+
+
+		</script>
+
 
     </body>
 

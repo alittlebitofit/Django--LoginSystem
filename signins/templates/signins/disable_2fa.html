@@ -4,12 +4,12 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Verify 2fa</title>
+        <title>Disable 2fa</title>
     </head>
 
     <body>
 
-        <form action="{% url 'signins:verify-2fa' %}" method="post">
+        <form action="{% url 'signins:disable-2fa' %}" method="post">
             {% csrf_token %}
 
 			{% if incorrect_totp_message %}
@@ -19,26 +19,27 @@
 			{% endif %}
 
 			{% if not enter_backup_code %}
-			<input type="number" id="totp_or_backupcode_Id" name="user_input_totp">
-			<br><br>
 
-			<button type="button" onclick="change_input_method()" id="toggle_button_Id">Enter Backup Code instead</button>
-			<br><br>
+				<input type="number" id="totp_or_backupcode_Id" name="user_input_totp">
+				<br><br>
+
+				<button type="button" onclick="change_input_method()" id="toggle_button_Id">Enter Backup Code instead</button>
+				<br><br>
 
 			{% else %}
 
-			<input type="text" id="totp_or_backupcode_Id" name="user_input_backup_code">
-			<br><br>
+				<input type="text" id="totp_or_backupcode_Id" name="user_input_backup_code">
+				<br><br>
 
-			<button type="button" onclick="change_input_method()" id="toggle_button_Id">Enter TOTP instead</button>
-			<br><br>
+				<button type="button" onclick="change_input_method()" id="toggle_button_Id">Enter TOTP instead</button>
+				<br><br>
 
 			{% endif %}
 
-			<input type="submit" name="cancel_verifying_2fa" value="Cancel">
+			<input type="submit" name="cancel_disabling_2fa" value="Cancel">
 			<br><br>
 
-			<input type="submit" name="verify_2fa" value="Verify">
+			<input type="submit" name="confirm_disabling_2fa" value="Disable">
 			<br><br>
 
         </form>

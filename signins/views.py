@@ -332,8 +332,9 @@ def success(request):
 			return redirect('/signins/set-2fa')
 
 		elif 'disable_2fa_button' in request.POST:
-			request.user.twofa.delete()
-			return redirect('/signins')
+			return redirect('/signins/disable-2fa')
+			#request.user.twofa.delete()
+			#return redirect('/signins')
 
 		elif 'change_2fa_button' in request.POST:
 			return redirect('/signins/set-2fa')
@@ -342,6 +343,81 @@ def success(request):
 	return redirect('/signins/success')
 
 
+
+
+
+def disable_2fa(request):
+
+	if not request.user.is_authenticated:
+		return redirect('/signins')
+
+
+	if request.method == 'GET':
+		return render(request, 'signins/disable_2fa.html')
+
+
+	if request.method == 'POST':
+
+		if 'cancel_disabling_2fa' in request.POST:
+			return redirect('/signins/success')
+
+		if 'confirm_disabling_2fa' in request.POST:
+			#if correct, then d
+				#request.user.twofa.delete()
+				#return redirect('/signins')
+
+			# if incorrect, then display error
+
+			# If the user chooses to login via TOTP.
+			if 'user_input_totp' in request.POST:
+				totp_user = request.POST.get('user_input_totp')
+
+				key = bytes(request.user.twofa.token, 'utf-8')
+				totp = gen_totp(key) # this is the TOTP we need to compare with
+
+
+				if totp_user == totp:
+
+					request.user.twofa.delete()
+					return redirect('/signins/success')
+
+				else:
+					return render(
+						request,
+						'signins/disable_2fa.html',
+						{
+							'incorrect_totp_message': 'Invalid TOTP. Please try again.',
+						},
+					)
+
+
+			# If the user chooses to login via Backup Code.
+			elif 'user_input_backup_code' in request.POST:
+				if request.user.twofa.verify_using_backup_code(request.POST.get('user_input_backup_code')):
+
+					# This block is entered only when the backup code is valid.
+					# So simply delete the 2fa and redirect to the success page.
+
+					request.user.twofa.delete()
+					return redirect('/signins/success')
+
+
+				else:
+
+					# Invalid backup code by user.
+					return render(
+						request,
+						'signins/disable_2fa.html',
+						{
+							'incorrect_backupcode_message': 'Invalid Backup Code. Please try again.',
+							'enter_backup_code': True,
+						},
+					)
+
+
+			pass
+
+	return redirect('/signins')
 
 
 

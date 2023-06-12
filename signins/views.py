@@ -24,32 +24,37 @@ import uuid
 
 from .models import TwoFA, BackupCode
 
+from django.views import View
+
+from .utils import tokenRelated
 
 
 # Landing view of this signins app.
-def index(request):
+class IndexView(View):
 	'''
 		Redirects to success page if the user is signed in.
 		Otherwise, takes you to registration page.
 	'''
-	if request.user.is_authenticated:
-		return redirect('/signins/success')
 
-	return render(request, 'signins/sign.html')
+	def get(self, request):
+		if request.user.is_authenticated:
+			return redirect('/signins/success')
+
+		return render(request, 'signins/sign.html')
+
+
 
 
 # Helps in registering the user.
-def register(request):
+class RegisterView(View):
 	'''Displays signup form as well as handles the registration mechanism'''
 
+	def get(self, request):
+		# If the user is already authenticated then redirect to success page.
+		# This situation occurs if the user manually types in the url.
+		if request.user.is_authenticated:
+			return redirect('/signins/success')
 
-	# If the user is already authenticated then redirect to success page.
-	# This situation occurs if the user manually types in the url.
-	if request.user.is_authenticated:
-		return redirect('/signins/success')
-
-
-	if request.method == 'GET':
 		return render(
 			request,
 			'signins/sign.html',
@@ -58,7 +63,10 @@ def register(request):
 			},
 		)
 
-	if request.method == 'POST':
+
+
+
+	def post(self, request):
 
 		fname = request.POST.get('first_name_register')
 		lname = request.POST.get('last_name_register')
@@ -100,29 +108,25 @@ def register(request):
 			return redirect('/signins/signin')
 
 
-	# Redirect to home page of the app in case any other METHOD requests were used.
-	return redirect('/signins')
 
 
 
 # Helps with signing the user in.
-def signin(request):
+class SigninView(View):
 	'''Displays signin form as well as handles the signin mechanism'''
-
-	# If the user is already authenticated then redirect to success page.
-	# This situation occurs if the user manually types in the url.
-	if request.user.is_authenticated:
-		return redirect('/signins/success')
 
 
 	# Load the signin page.
-	if request.method == 'GET':
+	def get(self, request):
+		# If the user is already authenticated then redirect to success page.
+		# This situation occurs if the user manually types in the url.
+		if request.user.is_authenticated:
+			return redirect('/signins/success')
+
 		return render(request, 'signins/sign.html')
 
 
-
-
-	if request.method == 'POST':
+	def post(self, request):
 
 		uname = request.POST.get('username_login')
 		pword = request.POST.get('password_login')
@@ -168,17 +172,17 @@ def signin(request):
 
 
 	# Redirect to home page of the app in case any other METHOD requests were used.
-	return redirect('/signins')
+	#return redirect('/signins')
 
 
 
 
 # Helps with 2nd factor authentication
-def verify_2fa(request):
+class Verify_2fa_View(View):
 	'''Displqy the verification page in the 2nd step of the login process.'''
 
 
-	if request.method == 'GET':
+	def get(self, request):
 
 		# Do this instead of checking whether the user is authenticated because
 		# user is AnonymousUser at this point, meaning, she is obviously not authenticated.
@@ -196,7 +200,7 @@ def verify_2fa(request):
 
 
 
-	if request.method == 'POST':
+	def post(self, request):
 
 		if 'cancel_verifying_2fa' in request.POST:
 			# Logout so that the session is cleared.
@@ -221,6 +225,7 @@ def verify_2fa(request):
 				totp_user = request.POST.get('user_input_totp')
 
 				key = bytes(user.twofa.token, 'utf-8')
+				#totp = tokenRelated.gen_totp(key) # this is the TOTP we need to compare with
 				totp = gen_totp(key) # this is the TOTP we need to compare with
 
 
@@ -271,13 +276,9 @@ def verify_2fa(request):
 						},
 					)
 
-	# If any other METHOD-requests are used to access this page.
-	return redirect('/signins')
-
-
 
 # Helps with displaying the success page.
-def success(request):
+class SuccessView(View):
 	'''
 		Displays a success page with a Change Password, Delete Account
 		and Logout button, only to the logged in user.
@@ -290,14 +291,14 @@ def success(request):
 		Finally, redirects to Signin page.
 	'''
 
-	# If the user is not authenticated, meaning
-	# the user might have manually typed the url without logging in,
-	# then redirect to signin page.
-	if not request.user.is_authenticated:
-		return redirect('/signins')
-
 	# GET request always renders a page, a success page in this case.
-	if request.method == 'GET':
+	def get(self, request):
+		# If the user is not authenticated, meaning
+		# the user might have manually typed the url without logging in,
+		# then redirect to signin page.
+		if not request.user.is_authenticated:
+			return redirect('/signins')
+
 
 		# This conditions allows us to display "Disable 2FA"
 		# instead of "Enable 2FA" because the user has already enabled it.
@@ -314,7 +315,7 @@ def success(request):
 
 
 	# POST request handling
-	if request.method == 'POST':
+	def post(self, request):
 
 		if 'change_password_button' in request.POST:
 			return redirect('/signins/change-password')
@@ -333,30 +334,25 @@ def success(request):
 
 		elif 'disable_2fa_button' in request.POST:
 			return redirect('/signins/disable-2fa')
-			#request.user.twofa.delete()
-			#return redirect('/signins')
+
 
 		elif 'change_2fa_button' in request.POST:
 			return redirect('/signins/set-2fa')
 
-	# If any other Method requested this, then redirect to home page of the app.
-	return redirect('/signins/success')
 
 
 
+# Helps with disabling 2fa
+class Disable_2fa_View(View):
 
+	def get(self, request):
+		if not request.user.is_authenticated:
+			return redirect('/signins')
 
-def disable_2fa(request):
-
-	if not request.user.is_authenticated:
-		return redirect('/signins')
-
-
-	if request.method == 'GET':
 		return render(request, 'signins/disable_2fa.html')
 
 
-	if request.method == 'POST':
+	def post(self, request):
 
 		if 'cancel_disabling_2fa' in request.POST:
 			return redirect('/signins/success')
@@ -373,11 +369,11 @@ def disable_2fa(request):
 				totp_user = request.POST.get('user_input_totp')
 
 				key = bytes(request.user.twofa.token, 'utf-8')
+				#totp = tokenRelated.gen_totp(key) # this is the TOTP we need to compare with
 				totp = gen_totp(key) # this is the TOTP we need to compare with
 
 
 				if totp_user == totp:
-
 					request.user.twofa.delete()
 					return redirect('/signins/success')
 
@@ -415,81 +411,73 @@ def disable_2fa(request):
 					)
 
 
-			pass
-
-	return redirect('/signins')
-
-
 
 
 # Changes Password.
-def changePassword(request):
+class ChangePasswordView(View):
 
-	# If the user is not authenticated, then redirect to signin page.
-	if not request.user.is_authenticated:
-		return redirect('/signins')
+	def get(self, request):
+		# If the user is not authenticated, then redirect to signin page.
+		if not request.user.is_authenticated:
+			return redirect('/signins')
 
-	# A GET request, so render an appropriate page.
-	if request.method == 'GET':
 		return render(request, 'signins/change_password.html')
 
-	# POST-request handling
-	if 'cancel_new_password_button' in request.POST:
-		return redirect('/signins/success')
 
-	elif 'change_password_button' in request.POST:
 
-		password1 = request.POST.get('new_password')
-		password2 = request.POST.get('repeat_new_password')
+	def post(self, request):
+		if 'cancel_new_password_button' in request.POST:
+			return redirect('/signins/success')
 
-		# If password is empty, display error.
-		if password1 == '' or password2 == '':
-			return render(
-				request,
-				'signins/change_password.html',
-				{
-					'empty_password_error_message': 'Password cannot be empty.',
-				},
-			)
+		elif 'change_password_button' in request.POST:
 
-		# Else change the password and manually save it in db.
-		# Although at this point there's no constraint on password.
-		else:
+			password1 = request.POST.get('new_password')
+			password2 = request.POST.get('repeat_new_password')
 
-			if password1 != password2:
+			# If password is empty, display error.
+			if password1 == '' or password2 == '':
 				return render(
 					request,
 					'signins/change_password.html',
 					{
-						'passwords_dont_match_message': 'Passwords do not match. Please try again.',
+						'empty_password_error_message': 'Password cannot be empty.',
 					},
 				)
 
-			request.user.set_password(password1)
-			request.user.save()
-			logout(request)
-			return redirect('/signins')
+			# Else change the password and manually save it in db.
+			# Although at this point there's no constraint on password.
+			else:
 
-	# If any other Method requestes this page, redirect to signin page.
-	return redirect('/signins')
+				if password1 != password2:
+					return render(
+						request,
+						'signins/change_password.html',
+						{
+							'passwords_dont_match_message': 'Passwords do not match. Please try again.',
+						},
+					)
+
+				request.user.set_password(password1)
+				request.user.save()
+				logout(request)
+				return redirect('/signins')
+
 
 
 
 # Sets a new 2fa token and backup codes.
-def set2fa(request):
+class Set_2fa_View(View):
 	'''
 		Whether the user wants to enable or change the 2fa token,
 		this single function is suffice for both.
 	'''
 
-	# This prevents the unauthorized users from accessing this page
-	# by manually typing the url.
-	if not request.user.is_authenticated:
-		return redirect('/signins')
+	def get(self, request):
+		# This prevents the unauthorized users from accessing this page
+		# by manually typing the url.
+		if not request.user.is_authenticated:
+			return redirect('/signins')
 
-
-
-	if request.method == 'GET':
 
 		user_username = request.user.username
 		user_email = request.user.email
@@ -502,17 +490,22 @@ def set2fa(request):
 
 		# This preventw generation of new token on page refresh.
 		if not '2fa_key' in request.session:
+			#key = tokenRelated.gen_token(user_username)
 			key = gen_token(user_username)
 			request.session['2fa_key'] = key.decode('utf-8')
 
 			generated_saved_token = base64.b32encode(key).decode('utf-8')
 			request.session['generated_saved_token'] = generated_saved_token
 
+			#tokenRelated.gen_qrcode(user_username, user_email, key)
 			gen_qrcode(user_username, user_email, key)
 
+			#tokenRelated.gen_totp(key)
 			gen_totp(key)
 
+			#backup_codes_list = tokenRelated.gen_backup_codes()
 			backup_codes_list = gen_backup_codes()
+			#request.session['backup_codes_list'] = tokenRelated.backup_codes_list
 			request.session['backup_codes_list'] = backup_codes_list
 
 		# Render the page with the token and backup codes.
@@ -530,8 +523,7 @@ def set2fa(request):
 
 
 
-	if request.method == 'POST':
-
+	def post(self, request):
 		# if the 2fa process is cancelled
 		if 'cancel_2fa_button' in request.POST:
 
@@ -565,6 +557,7 @@ def set2fa(request):
 			key = request.session.get('2fa_key')
 			key = bytes(key, 'utf-8')
 
+			#totp = tokenRelated.gen_totp(key)
 			totp = gen_totp(key)
 
 			# If the TOTP is correct.
@@ -610,9 +603,6 @@ def set2fa(request):
 						'backup_codes': backup_codes_list,
 					},
 				)
-
-	# Return to success page if this page is accessed via any other METHOD requests.
-	return redirect('/signins/success')
 
 
 

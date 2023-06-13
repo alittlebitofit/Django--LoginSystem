@@ -40,8 +40,65 @@ class IndexView(View):
 		if request.user.is_authenticated:
 			return redirect('/signins/success')
 
-		return render(request, 'signins/sign.html')
 
+		# Implemented these 2 checks so that the url doesn't say 'signin' or 'registration' on failure.
+
+		if 'login_failed' in request.session:
+			del request.session['login_failed']
+
+			# Authentication failed. Redisplay the login form with failure message.
+			return render(
+				request,
+				#'signins/sign_backup.html',
+				'signins/sign.html',
+				{
+					'login_failed_message': 'Login failed. Try again.',
+				},
+			)
+
+		if 'registration_failed' in request.session:
+			del request.session['registration_failed']
+
+			# Registration failed. Redisplay the registration form with failure message.
+			return render(
+				request,
+				#'signins/sign_backup.html',
+				'signins/sign.html',
+				{
+					'registration_failed_message': 'Registration failed. Try again.',
+					'registration_tab': True,
+				}
+			)
+
+		if 'registration_tab' in request.session:
+			del request.session['registration_tab']
+
+			return render(
+                request,
+				#'signins/sign_backup.html',
+				'signins/sign.html',
+                {
+                    'registration_tab': True,
+                }
+            )
+
+
+		if 'registration_success' in request.session:
+			del request.session['registration_success']
+
+			return render(
+                request,
+                #'signins/sign_backup.html',
+                'signins/sign.html',
+                {
+                    'registration_success_message': 'Successfully signed up! You can now login.',
+                }
+            )
+
+
+
+		#return render(request, 'signins/sign_backup.html')
+		return render(request, 'signins/sign.html')
 
 
 
@@ -55,14 +112,9 @@ class RegisterView(View):
 		if request.user.is_authenticated:
 			return redirect('/signins/success')
 
-		return render(
-			request,
-			'signins/sign.html',
-			{
-				'registration_tab': True,
-			},
-		)
+		request.session['registration_tab'] = True
 
+		return redirect('/signins')
 
 
 
@@ -89,6 +141,9 @@ class RegisterView(View):
 			)
 
 		except:
+			request.session['registration_failed'] = True
+			return redirect('/signins')
+
 	        # Redisplay the registration form because registration failed.
 			return render(
 				request,
@@ -101,11 +156,12 @@ class RegisterView(View):
 
 		else:
 			# Successfully created a new user and it was automatically saved in the db.
+			request.session['registration_success'] = True
 
 			# Always return an HttpResponseRedirect after successfully dealing
 			# with POST data. This prevents data from being posted twice if
 			# user hits the back button.
-			return redirect('/signins/signin')
+			return redirect('/signins')
 
 
 
@@ -123,7 +179,7 @@ class SigninView(View):
 		if request.user.is_authenticated:
 			return redirect('/signins/success')
 
-		return render(request, 'signins/sign.html')
+		return redirect('/signins')
 
 
 	def post(self, request):
@@ -161,6 +217,9 @@ class SigninView(View):
 
 		else:
 
+			request.session['login_failed'] = True
+			return redirect('/signins')
+
 			# Authentication failed. Redisplay the login form.
 			return render(
 				request,
@@ -169,10 +228,6 @@ class SigninView(View):
 					'login_failed_message': 'Login failed. Try again.',
 				},
 			)
-
-
-	# Redirect to home page of the app in case any other METHOD requests were used.
-	#return redirect('/signins')
 
 
 
@@ -323,7 +378,8 @@ class SuccessView(View):
 		elif 'delete_account_button' in request.POST:
 			request.user.delete()
 			logout(request)
-			return redirect('/signins/register')
+			request.session['registration_tab'] = True
+			return redirect('/signins')
 
 		elif 'logout_button' in request.POST:
 			logout(request)

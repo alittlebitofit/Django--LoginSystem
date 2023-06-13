@@ -17,23 +17,19 @@
 		<!-- Google Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet">
 
+		<!-- MDB -->
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.1/mdb.min.css" rel="stylesheet">
+
+		<!-- MDB -->
+		<script  src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.1/mdb.min.js"></script>
+
 		<style>
 
-			* {
-				box-sizing: border-box;
-			}
-
 			body {padding: 24px;}
-/*
-			.password-container {
-				//width: 400px;
-				position: relation;
-			}
 
-			.fa-eye {
-				position: absolute;
+			.form-outline {
+				border: 1px solid gray;
 			}
-*/
 
 		</style>
 
@@ -42,28 +38,28 @@
     <body>
 
 		<!-- Pills navs -->
-		<ul class="nav nav-pills nav-justified mb-3" id="pills-tab" role="tablist">
+		<ul class="nav nav-pills nav-justified mb-3" id="ex1" role="tablist">
 			<li class="nav-item" role="presentation">
-				<button class="nav-link {% if not registration_tab %} show active {% endif %}" id="pills-login-tab" data-bs-toggle="pill" data-bs-target="#pills-login" type="button" role="tab" aria-controls="pills-login" aria-selected="true">Login</button>
+				<a class="nav-link {% if not registration_tab %} active {% endif %}" id="tab-login" data-mdb-toggle="pill" href="#pills-login" role="tab" aria-controls="pills-login" aria-selected="true">Login</a>
 			</li>
 
 			<li class="nav-item" role="presentation">
-				<button class="nav-link {% if registration_tab %} show active {% endif %}" id="pills-register-tab" data-bs-toggle="pill" data-bs-target="#pills-register" type="button" role="tab" aria-controls="pills-register" aria-selected="false">Register</button>
+				<a class="nav-link {% if registration_tab %} active {% endif %}" id="tab-register" data-mdb-toggle="pill" href="#pills-register" role="tab" aria-controls="pills-register" aria-selected="false">Register</a>
 			</li>
 		</ul>
 		<!-- Pills navs -->
 
 
-
-
-
 		<!-- Pills content -->
-		<!-- Pills Login Section -->
-		<div class="tab-content" id="pills-tabContent">
+		<div class="tab-content">
 
-			<div class="tab-pane {% if not registration_tab %} show active {% endif %}" id="pills-login" role="tabpanel" aria-labelledby="pills-login-tab" tabindex="0">
 
-				<form action="{% url 'signins:signin' %}" method="post" class="needs-validation" novalidate>
+
+
+
+			<div class="tab-pane {% if not registration_tab %} active {% endif %}" id="pills-login" role="tabpanel" aria-labelledby="tab-login">
+
+				<form action="{% url 'signins:signin' %}" method="post" class"needs-validation">
 					{% csrf_token %}
 
 					{% if login_failed_message %}
@@ -96,26 +92,22 @@
 					<p class="text-center">or:</p>
 
 					<!-- Username input -->
-					<div class="form-floating mb-3">
-						<input type="text" class="form-control" id="floatingUsernameId" name="username_login" minlength="8" placeholder required>
-						<label class="form-label" for="floatingUsernameIdd">Username</label>
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid Username</div>
+					<div class="form-outline mb-4">
+						<input type="text" id="loginName" class="form-control" name="username_login" required>
+						<label class="form-label" for="loginName">Username</label>
 					</div>
 
 					<!-- Password input -->
-					<div class="form-floating">
-						<input type="password" id="login-password_id" class="form-control" name="password_login" minlength="8" placeholder required>
-						<label class="form-label" for="login-password_id">Password</label>
-						<br>
-						<span class="input-group-text" onclick="password_toggle('login-password_id', 'login-password_eye-icon_id')">
-							<i class="fas fa-eye" id="login-password_eye-icon_id"></i>
-						</span>
-						<br>
+					<div class="form-outline mb-4 input-group-append">
+						<input type="password" id="loginPassword" class="form-control" name="password_login" required>
+						<label class="form-label" for="loginPassword">Password</label>
 
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid Password</div>
+						<span class="input-group-text" onclick="password_show_hide();">
+							<i class="fas fa-eye" id="show_eye"></i>
+							<i class="fas fa-eye-slash d-none" id="hide_eye"></i>
+						</span>
 					</div>
+
 
 					<!-- 2 column grid layout -->
 					<div class="row mb-4">
@@ -134,9 +126,7 @@
 					</div>
 
 					<!-- Submit button -->
-					<div class="d-grid gap-2">
-						<button type="submit" class="btn btn-primary mb-3">Sign in</button>
-					</div>
+					<button type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
 
 					<!-- Register buttons -->
 					<div class="text-center">
@@ -145,7 +135,6 @@
 
 				</form>
 			</div>
-			<!-- Pills Login Section -->
 
 
 
@@ -153,10 +142,10 @@
 
 
 
-			<!-- Pills Register Section -->
-			<div class="tab-pane {% if registration_tab %} show active {% endif %}" id="pills-register" role="tabpanel" aria-labelledby="pills-register-tab" tabindex="0">
 
-				<form action="{% url 'signins:register' %}" method="post" class="needs-validation" novalidate>
+			<div class="tab-pane {% if registration_tab %} active {% endif %}" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
+
+				<form action="{% url 'signins:register' %}" method="post" class"needs-validation">
 					{% csrf_token %}
 
 					{% if registration_failed_message %}
@@ -185,59 +174,48 @@
 					<p class="text-center">or:</p>
 
 					<!-- First name input -->
-					<div class="form-floating mb-3">
-						<input type="text" id="registerFirstName" class="form-control" name="first_name_register" placeholder required>
+					<div class="form-outline mb-4">
+						<input type="text" id="registerFirstName" class="form-control" name="first_name_register" required>
 						<label class="form-label" for="registerFirstName">First Name</label>
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid First Name</div>
 					</div>
 
 					<!-- Last name input -->
-					<div class="form-floating mb-3">
-						<input type="text" id="registerLastName" class="form-control" name="last_name_register" placeholder required>
+					<div class="form-outline mb-4">
+						<input type="text" id="registerLastName" class="form-control" name="last_name_register" required>
 						<label class="form-label" for="registerLastName">Last Name</label>
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid Last Name</div>
 					</div>
 
 					<!-- Username input -->
-					<div class="form-floating mb-3">
-						<input type="text" id="registerUsername" class="form-control" name="username_register" minlength="8" placeholder required>
+					<div class="form-outline mb-4">
+						<input type="text" id="registerUsername" class="form-control" name="username_register" required>
 						<label class="form-label" for="registerUsername">Username</label>
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid Username</div>
 					</div>
 
 					<!-- Email input -->
-					<div class="form-floating mb-3">
-						<input type="email" id="registerEmail" class="form-control" name="email_register" placeholder required>
+					<div class="form-outline mb-4">
+						<input type="email" id="registerEmail" class="form-control" name="email_register" required>
 						<label class="form-label" for="registerEmail">Email</label>
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid Email</div>
 					</div>
 
 					<!-- Password input -->
-					<div class="form-floating mb-3">
-						<input type="password" id="register-password_id" class="form-control" name="password_register" minlength="8" placeholder required>
-						<label class="form-label" for="register-password_id">Password</label>
-						<br>
-						<span class="input-group-text" onclick="password_toggle('register-password_id', 'register-password_eye-icon_id')">
-                            <i class="fas fa-eye" id="register-password_eye-icon_id"></i>
+					<div class="form-outline mb-4">
+						<input type="password" id="registerPassword" class="form-control" name="password_register" required>
+						<label class="form-label" for="registerPassword">Password</label>
+						<span class="input-group-text" onclick="register_password_show_hide();">
+                            <i class="fas fa-eye" id="register_password_show_eye"></i>
+                            <i class="fas fa-eye-slash d-none" id="register_password_hide_eye"></i>
                         </span>
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid Password</div>
 					</div>
 
 					<!-- Repeat Password input -->
-					<div class="form-floating mb-3">
-						<input type="password" id="register-repeat-password_id" class="form-control" name="repeat_password_register" minlength="8" placeholder required>
-						<label class="form-label" for="register-repeat-password_id">Repeat password</label>
-						<br>
-						<span class="input-group-text" onclick="password_toggle('register-repeat-password_id', 'register-repeat-password_eye-icon_id')">
-                            <i class="fas fa-eye" id="register-repeat-password_eye-icon_id"></i>
+					<div class="form-outline mb-4">
+						<input type="password" id="registerRepeatPassword" class="form-control" name="repeat_password_register" required>
+						<label class="form-label" for="registerRepeatPassword">Repeat password</label>
+
+						<span class="input-group-text" onclick="register_repeat_password_show_hide();">
+                            <i class="fas fa-eye" id="register_repeat_password_show_eye"></i>
+                            <i class="fas fa-eye-slash d-none" id="register_repeat_password_hide_eye"></i>
                         </span>
-						<div class="valid-feedback">Looks good!</div>
-						<div class="invalid-feedback">Please enter a valid Password</div>
 
 					</div>
 
@@ -248,9 +226,8 @@
 					</div>
 
 					<!-- Submit button -->
-					<div class="d-grid gap-2">
-						<button type="submit" class="btn btn-primary btn-block mb-3">Sign up</button>
-					</div>
+					<button type="submit" class="btn btn-primary btn-block mb-3">Sign up</button>
+
 
 					<!-- Signin buttons -->
 					<div class="text-center">
@@ -261,24 +238,62 @@
 				</form>
 			</div>
 		</div>
-		<!-- Pills Register Section -->
 		<!-- Pills content -->
-
-
-
-
-
-
 
 		<script>
 
-			function password_toggle(passId, eyeId) {
-				const passwordInput = document.querySelector("#"+passId);
-				passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+			function password_show_hide() {
+				var x = document.getElementById("loginPassword");
+				var show_eye = document.getElementById("show_eye");
+				var hide_eye = document.getElementById("hide_eye");
+				hide_eye.classList.remove("d-none");
 
-				document.querySelector("#"+eyeId).classList.toggle("fa-eye-slash");
+				if (x.type === "password") {
+					x.type = "text";
+					show_eye.style.display = "none";
+					hide_eye.style.display = "block";
+				} else {
+					x.type = "password";
+					show_eye.style.display = "block";
+					hide_eye.style.display = "none";
+				}
 			}
 
+
+			function register_password_show_hide() {
+	            var x = document.getElementById("registerPassword");
+	            var show_eye = document.getElementById("register_password_show_eye");
+	            var hide_eye = document.getElementById("register_password_hide_eye");
+	            hide_eye.classList.remove("d-none");
+
+	            if (x.type === "password") {
+	                x.type = "text";
+	                show_eye.style.display = "none";
+	                hide_eye.style.display = "block";
+	            } else {
+	                x.type = "password";
+	                show_eye.style.display = "block";
+	                hide_eye.style.display = "none";
+	            }
+	        }
+
+
+			function register_repeat_password_show_hide() {
+	            var x = document.getElementById("registerRepeatPassword");
+	            var show_eye = document.getElementById("register_repeat_password_show_eye");
+	            var hide_eye = document.getElementById("register_repeat_password_hide_eye");
+	            hide_eye.classList.remove("d-none");
+
+	            if (x.type === "password") {
+ 	                x.type = "text";
+	                show_eye.style.display = "none";
+	                hide_eye.style.display = "block";
+	            } else {
+	                x.type = "password";
+	                show_eye.style.display = "block";
+	                hide_eye.style.display = "none";
+	            }
+	        }
 
 			document.querySelector("#register_link_Id").addEventListener("click", switchToRegisterTab);
 
@@ -289,13 +304,13 @@
 
 				event.preventDefault();
 
-				loginTab = document.querySelector("#pills-login-tab");
+				loginTab = document.querySelector("#tab-login");
 				loginTab.classList.remove("active");
 
 				loginSection = document.querySelector("#pills-login");
 				loginSection.classList.remove("active");
 
-				registerTab = document.querySelector("#pills-register-tab");
+				registerTab = document.querySelector("#tab-register");
 				registerTab.classList.add("active");
 
 				registerSection = document.querySelector("#pills-register");
@@ -307,13 +322,13 @@
 
 				event.preventDefault();
 
-				loginTab = document.querySelector("#pills-login-tab");
+				loginTab = document.querySelector("#tab-login");
 				loginTab.classList.add("active");
 
 				loginSection = document.querySelector("#pills-login");
 				loginSection.classList.add("active");
 
-				registerTab = document.querySelector("#pills-register-tab");
+				registerTab = document.querySelector("#tab-register");
 				registerTab.classList.remove("active");
 
 				registerSection = document.querySelector("#pills-register");

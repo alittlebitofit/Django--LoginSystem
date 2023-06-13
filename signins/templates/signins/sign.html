@@ -163,6 +163,14 @@
 						<p><strong>{{ registration_failed_message }}</strong></p>
 					{% endif %}
 
+					{% if unmatched_password_message %}
+						<p><strong>{{ unmatched_password_message }}</strong></p>
+					{% endif %}
+
+					{% if tnc_not_agreed_message %}
+						<p><strong>{{ tnc_not_agreed_message }}</strong></p>
+					{% endif %}
+
 					<div class="text-center mb-3">
 						<p>Sign up with:</p>
 						<button type="button" class="btn btn-link btn-floating mx-1">
@@ -243,7 +251,7 @@
 
 					<!-- Checkbox -->
 					<div class="form-check d-flex justify-content-center mb-4">
-						<input class="form-check-input me-2" type="checkbox" value="" id="registerCheck" checked aria-describedby="registerCheck" name="tnc_checkbox_register">
+						<input class="form-check-input me-2" type="checkbox" value="checked" id="registerCheck" checked aria-describedby="registerCheck" name="tnc_checkbox_register">
 						<label class="form-check-label" for="registerCheck">I have read and agree to the terms</label>
 					</div>
 

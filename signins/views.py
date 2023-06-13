@@ -95,6 +95,30 @@ class IndexView(View):
                 }
             )
 
+		if 'unmatched_password' in request.session:
+			del request.session['unmatched_password']
+
+			return render(
+				request,
+				'signins/sign.html',
+				{
+					'unmatched_password_message': 'Passwords do not match.',
+                    'registration_tab': True,
+				},
+			)
+
+		if 'tnc_not_agreed' in request.session:
+			del request.session['tnc_not_agreed']
+
+			return render(
+				request,
+				'signins/sign.html',
+				{
+					'tnc_not_agreed_message': 'Please agree to terms and conditions.',
+                    'registration_tab': True,
+				},
+			)
+
 
 
 		#return render(request, 'signins/sign_backup.html')
@@ -127,8 +151,15 @@ class RegisterView(View):
 		pword = request.POST.get('password_register')
 		pword_repeat = request.POST.get('repeat_password_register')
 
-
 		tnc_checkbox_register = request.POST.get('tnc_checkbox_register')
+
+		if pword != pword_repeat:
+			request.session['unmatched_password'] = True
+			return redirect('/signins')
+
+		if not tnc_checkbox_register:
+			request.session['tnc_not_agreed'] = True
+			return redirect('/signins')
 
 		try:
 			# Try creating a new user.
@@ -143,16 +174,6 @@ class RegisterView(View):
 		except:
 			request.session['registration_failed'] = True
 			return redirect('/signins')
-
-	        # Redisplay the registration form because registration failed.
-			return render(
-				request,
-				'signins/sign.html',
-				{
-					'registration_failed_message': 'Registration failed. Try again.',
-					'registration_tab': True,
-				},
-			)
 
 		else:
 			# Successfully created a new user and it was automatically saved in the db.

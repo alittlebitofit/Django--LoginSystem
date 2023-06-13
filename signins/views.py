@@ -498,6 +498,15 @@ class ChangePasswordView(View):
 		if not request.user.is_authenticated:
 			return redirect('/signins')
 
+
+		if hasattr(request.user, 'twofa'):
+			return render(
+				request,
+				'signins/change_password.html',
+				{
+					'display_2fa_form': True,
+				},
+			)
 		return render(request, 'signins/change_password.html')
 
 
@@ -513,6 +522,18 @@ class ChangePasswordView(View):
 
 			# If password is empty, display error.
 			if password1 == '' or password2 == '':
+
+				if hasattr(request.user, 'twofa'):
+					return render(
+						request,
+						'signins/change_password.html',
+						{
+							'empty_password_error_message': 'Password cannot be empty.',
+							'display_2fa_form': True,
+						},
+					)
+
+
 				return render(
 					request,
 					'signins/change_password.html',
@@ -526,6 +547,18 @@ class ChangePasswordView(View):
 			else:
 
 				if password1 != password2:
+
+
+					if hasattr(request.user, 'twofa'):
+						return render(
+							request,
+							'signins/change_password.html',
+							{
+								'passwords_dont_match_message': 'Passwords do not match. Please try again.',
+								'display_2fa_form': True,
+							},
+						)
+
 					return render(
 						request,
 						'signins/change_password.html',
@@ -534,10 +567,68 @@ class ChangePasswordView(View):
 						},
 					)
 
-				request.user.set_password(password1)
-				request.user.save()
-				logout(request)
-				return redirect('/signins')
+
+				if not hasattr(request.user, 'twofa'):
+					request.user.set_password(password1)
+					request.user.save()
+					logout(request)
+					return redirect('/signins')
+
+				else:
+
+					# If the user chooses to login via TOTP.
+					if 'user_input_totp' in request.POST:
+						totp_user = request.POST.get('user_input_totp')
+
+						key = bytes(request.user.twofa.token, 'utf-8')
+						#totp = tokenRelated.gen_totp(key) # this is the TOTP we need to compare with
+						totp = gen_totp(key) # this is the TOTP we need to compare with
+
+
+						if totp_user == totp:
+							request.user.set_password(password1)
+							request.user.save()
+							logout(request)
+							return redirect('/signins')
+
+						else:
+							return render(
+								request,
+								'signins/change_password.html',
+								{
+									'incorrect_totp_message': 'Invalid TOTP. Please try again.',
+									'display_2fa_form': True,
+								},
+							)
+
+
+					# If the user chooses to login via Backup Code.
+					elif 'user_input_backup_code' in request.POST:
+						if request.user.twofa.verify_using_backup_code(request.POST.get('user_input_backup_code')):
+
+							# This block is entered only when the backup code is valid.
+							# So simply delete the 2fa and redirect to the success page.
+							request.user.set_password(password1)
+							request.user.save()
+							logout(request)
+							return redirect('/signins')
+
+
+						else:
+
+							# Invalid backup code by user.
+							return render(
+								request,
+								'signins/change_password.html',
+								{
+									'incorrect_backupcode_message': 'Invalid Backup Code. Please try again.',
+									'enter_backup_code': True,
+									'display_2fa_form': True,
+								},
+							)
+
+		elif 'cancel_verifying_2fa' in request.POST:
+			return redirect('/signins/success')
 
 
 

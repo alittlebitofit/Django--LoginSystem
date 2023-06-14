@@ -397,10 +397,13 @@ class SuccessView(View):
 			return redirect('/signins/change-password')
 
 		elif 'delete_account_button' in request.POST:
-			request.user.delete()
-			logout(request)
-			request.session['registration_tab'] = True
-			return redirect('/signins')
+			if not hasattr(request.user, 'twofa'):
+				request.user.delete()
+				logout(request)
+				request.session['registration_tab'] = True
+				return redirect('/signins')
+
+			return redirect('/signins/delete-account')
 
 		elif 'logout_button' in request.POST:
 			logout(request)
@@ -417,6 +420,83 @@ class SuccessView(View):
 			return redirect('/signins/set-2fa')
 
 
+class Delete_Account_View(View):
+	def get(self, request):
+		if not request.user.is_authenticated:
+			return redirect('/signins')
+
+		return render(request, 'signins/delete_account.html')
+
+	def post(self, request):
+
+		if 'cancel_deletion_button' in request.POST:
+			print('cancel button pressed')
+			return redirect('/signins/success')
+
+		# This authentication seems necessary to check whether user has entered correct password.
+		# I don't kmow of a better approach as of now.
+		user = authenticate(request, username=request.user.username, password=request.POST.get('password'))
+
+		if user is None:
+			print('password incorrect')
+			return render(
+				request,
+				'signins/delete_account.html',
+				{
+					'password_error_message': 'Invalid password.',
+				},
+			)
+
+		elif 'confirm_deletion_button' in request.POST:
+			print('password correct')
+			# If the user chooses to login via TOTP.
+			if 'user_input_totp' in request.POST:
+				totp_user = request.POST.get('user_input_totp')
+
+				key = bytes(request.user.twofa.token, 'utf-8')
+				#totp = tokenRelated.gen_totp(key) # this is the TOTP we need to compare with
+				totp = gen_totp(key) # this is the TOTP we need to compare with
+
+
+				if totp_user == totp:
+					request.user.delete()
+					logout(request)
+					request.session['registration_tab'] = True
+					return redirect('/signins')
+
+				else:
+					return render(
+						request,
+						'signins/delete_account.html',
+						{
+							'incorrect_totp_message': 'Invalid TOTP. Please try again.',
+						},
+					)
+
+
+			# If the user chooses to login via Backup Code.
+			elif 'user_input_backup_code' in request.POST:
+				if request.user.twofa.verify_using_backup_code(request.POST.get('user_input_backup_code')):
+
+					# This block is entered only when the backup code is valid.
+					# So simply delete the 2fa and redirect to the success page.
+
+					request.user.delete()
+					logout(request)
+					request.session['registration_tab'] = True
+					return redirect('/signins')
+
+				else:
+
+					# Invalid backup code by user.
+					return render(
+						request,
+						'signins/delete_account.html',
+						{
+							'incorrect_backupcode_message': 'Invalid Backup Code. Please try again.',
+							'enter_backup_code': True,
+						},
+					)
 
 
 # Helps with disabling 2fa
@@ -491,7 +571,7 @@ class Disable_2fa_View(View):
 
 
 # Changes Password.
-class ChangePasswordView(View):
+class Change_Password_View(View):
 
 	def get(self, request):
 		# If the user is not authenticated, then redirect to signin page.

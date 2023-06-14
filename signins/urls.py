@@ -10,8 +10,9 @@ urlpatterns = [
 	path("register/", views.RegisterView.as_view(), name="register"),
 	path("signin/", views.SigninView.as_view(), name="signin"),
 	path("success/", views.SuccessView.as_view(), name="success"),
-	path("change-password/", views.ChangePasswordView.as_view(), name="change-password"),
+	path("change-password/", views.Change_Password_View.as_view(), name="change-password"),
 	path("set-2fa/", views.Set_2fa_View.as_view(), name="set-2fa"),
 	path('verify/', views.Verify_2fa_View.as_view(), name='verify-2fa'),
 	path('disable-2fa/', views.Disable_2fa_View.as_view(), name='disable-2fa'),
+	path('delete-account/', views.Delete_Account_View.as_view(), name='delete-account'),
 ]
